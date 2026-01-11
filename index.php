@@ -958,21 +958,29 @@ try {
                             </div>
                             <div class="card-body">
                                 <?php
-                                // Use subject-specific segmentation if subject is selected
-                                if ($selected_subject) {
-                                    $segmented = segmentStudentsBySubject($pdo, $selected_subject, $selected_grade, $selected_room, null, $selected_exam_set);
-                                } else {
-                                    $segmented = segmentStudents($pdo, $selected_grade, $selected_room, null, $selected_exam_set);
-                                }
-                                
-                                if (empty($segmented)):
+                                if (!$selected_exam_set):
                                 ?>
-                                    <div class="alert alert-info mb-0">
-                                        <i class="bi bi-info-circle"></i>
-                                        <strong>ยังไม่มีข้อมูลนักเรียน</strong><br>
-                                        กรุณานำเข้าข้อมูลนักเรียนและคะแนนผ่านเมนู <a href="import.php" class="alert-link">นำเข้าข้อมูล</a>
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>กรุณาเลือกชุดข้อสอบ</strong><br>
+                                        ต้องเลือกชุดข้อสอบ (Exam Set) เพื่อดูการจัดกลุ่มนักเรียน
                                     </div>
-                                <?php else: ?>
+                                <?php else:
+                                    // Use subject-specific segmentation if subject is selected
+                                    if ($selected_subject) {
+                                        $segmented = segmentStudentsBySubject($pdo, $selected_subject, $selected_grade, $selected_room, null, $selected_exam_set);
+                                    } else {
+                                        $segmented = segmentStudents($pdo, $selected_grade, $selected_room, null, $selected_exam_set);
+                                    }
+                                    
+                                    if (empty($segmented)):
+                                    ?>
+                                        <div class="alert alert-info mb-0">
+                                            <i class="bi bi-info-circle"></i>
+                                            <strong>ยังไม่มีข้อมูลนักเรียน</strong><br>
+                                            กรุณานำเข้าข้อมูลนักเรียนและคะแนนผ่านเมนู <a href="import.php" class="alert-link">นำเข้าข้อมูล</a>
+                                        </div>
+                                    <?php else: ?>
                                 <div class="table-responsive">
                                     <table class="table table-striped">
                                         <thead>
@@ -1069,6 +1077,7 @@ try {
                                         </tfoot>
                                     </table>
                                 </div>
+                                <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </div>
