@@ -951,8 +951,9 @@ try {
                                     👥 การจัดกลุ่มนักเรียน
                                     <?php if ($selected_subject): ?>
                                         <span class="badge bg-light text-dark ms-2">วิชา: <?php echo htmlspecialchars($selected_subject); ?></span>
-                                    <?php else: ?>
-                                        <span class="badge bg-light text-dark ms-2">ทุกวิชา</span>
+                                    <?php endif; ?>
+                                    <?php if ($selected_exam_set): ?>
+                                        <span class="badge bg-light text-dark ms-2">ชุด: <?php echo htmlspecialchars($selected_exam_set); ?></span>
                                     <?php endif; ?>
                                 </h5>
                             </div>
