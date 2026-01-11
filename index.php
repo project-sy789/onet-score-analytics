@@ -207,7 +207,7 @@ try {
                         <div class="col-md-2">
                             <label class="form-label">รายวิชา</label>
                             <select name="subject" class="form-select">
-                                <option value="">-- ทุกวิชา --</option>
+                                <option value="">-- เลือกวิชา --</option>
                                 <?php foreach ($subjects as $subj): ?>
                                     <option value="<?php echo htmlspecialchars($subj); ?>"
                                             <?php echo $selected_subject === $subj ? 'selected' : ''; ?>>
@@ -220,7 +220,7 @@ try {
                         <div class="col-md-2">
                             <label class="form-label">ชุดข้อสอบ</label>
                             <select name="exam_set" class="form-select">
-                                <option value="">-- ทุกชุด --</option>
+                                <option value="">-- เลือกชุด --</option>
                                 <?php foreach ($exam_sets as $exam_set): ?>
                                     <option value="<?php echo htmlspecialchars($exam_set); ?>"
                                             <?php echo $selected_exam_set === $exam_set ? 'selected' : ''; ?>>
@@ -285,8 +285,8 @@ try {
                 const grade = gradeSelect.value;
                 const previousSubject = subjectSelect.value || currentSubject;
                 
-                // Keep "All Subjects" option
-                subjectSelect.innerHTML = '<option value="">-- ทุกวิชา --</option>';
+                // Keep "Select Subject" option
+                subjectSelect.innerHTML = '<option value="">-- เลือกวิชา --</option>';
                 
                 // If grade selected and data exists
                 if (grade && cascadeData[grade]) {
@@ -309,7 +309,7 @@ try {
                 const subject = subjectSelect.value;
                 const previousExamSet = examSetSelect.value || currentExamSet;
                 
-                examSetSelect.innerHTML = '<option value="">-- ทุกชุด --</option>';
+                examSetSelect.innerHTML = '<option value="">-- เลือกชุด --</option>';
                 
                 if (grade && subject && cascadeData[grade] && cascadeData[grade][subject]) {
                     const examSets = cascadeData[grade][subject];
@@ -719,7 +719,7 @@ try {
                                         GROUP_CONCAT(
                                             DISTINCT CASE 
                                                 WHEN q.question_number IS NOT NULL 
-                                                THEN CONCAT(COALESCE(q.exam_set, 'default'), ':', q.question_number) 
+                                                THEN q.question_number 
                                             END 
                                             ORDER BY q.exam_set, q.question_number 
                                             SEPARATOR ', '
