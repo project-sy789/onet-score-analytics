@@ -1,0 +1,14 @@
+{
+    "thresholds": {
+        "p80": 80,
+        "p60": 60,
+        "p40": 40,
+        "p20": 20
+    },
+    "weakness_threshold": 50,
+    "strength_threshold": 80,
+    "indicator_pass_threshold": 50,
+    "subject_weakness_thresholds": {},
+    "subject_strength_thresholds": {},
+    "subject_indicator_pass_thresholds": {}
+}

@@ -1,0 +1,49 @@
+# Configuration Files
+config.php
+config_test.php
+
+# Database Files
+*.db
+*.sqlite
+# *.sql  <-- Commenting this out to allow schema.sql for now, or just allowing specific one
+*.dump
+
+# Development Files
+demo_setup.php
+auto_import.php
+migrate_*.php
+install_sqlite.php
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+error_log
+php_errors.log
+
+# Temporary Files
+tmp/
+temp/
+cache/
+
+# Backup Files
+*.bak
+*.backup
+*~
+
+# OS Files
+Thumbs.db
+.DS_Store
+
+# Node modules (if using any)
+node_modules/
+
+# Composer (if using)
+/vendor/
+composer.lock

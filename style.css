@@ -1,0 +1,499 @@
+/**
+ * Custom Styles for O-NET Student Analysis System
+ * Professional educational theme with Thai font support
+ */
+
+/* Global Styles */
+* {
+    font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* Navigation */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.3rem;
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+}
+
+/* Tables */
+.table {
+    font-size: 0.95rem;
+}
+
+.table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Color coding for item analysis */
+.table-warning {
+    background-color: #fff3cd !important;
+}
+
+.table-danger {
+    background-color: #f8d7da !important;
+    font-weight: 600;
+}
+
+/* Badges */
+.badge {
+    padding: 0.4em 0.8em;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Custom purple badge for excellent tier */
+.badge-purple {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+/* Forms */
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 0.6rem 0.75rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #65408b 100%);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+    border: none;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #4a9428 0%, #96c956 100%);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border: none;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #de7fe9 0%, #e3465a 100%);
+    color: white;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Code blocks */
+code {
+    background-color: #f8f9fa;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #e83e8c;
+    display: inline-block;
+}
+
+/* Charts */
+canvas {
+    max-height: 400px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .table {
+        font-size: 0.85rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    @page {
+        size: A4;
+        margin: 1cm;
+    }
+
+    body {
+        background-color: white;
+        color: black;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Print specific display utilities */
+    .d-print-none {
+        display: none !important;
+    }
+
+    .d-print-block {
+        display: block !important;
+    }
+
+    /* Utility to force page break */
+    .page-break {
+        page-break-before: always !important;
+        break-before: page !important;
+        display: block;
+        height: 1px;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    /* Hide non-printable elements */
+    .navbar,
+    .btn,
+    .alert,
+    footer,
+    #filterCard,
+    .modal,
+    form,
+    .no-print {
+        display: none !important;
+    }
+
+    /* Layout adjustments - NUCLEAR OPTION to fix Flexbox Print Issues */
+    body,
+    .container-fluid,
+    .row,
+    .col-12,
+    .col-md-5,
+    .card,
+    .card-body {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        flex: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: none !important;
+        position: static !important;
+        /* Remove relative/absolute positioning */
+    }
+
+    /* Re-add necessary margins for separation */
+    .card {
+        margin-bottom: 20px !important;
+        border: 1px solid #ddd !important;
+    }
+
+    .card-header {
+        background-color: #f0f0f0 !important;
+        /* Light gray to save ink */
+        border-bottom: 1px solid #000 !important;
+        color: black !important;
+        /* FORCE BLACK TEXT */
+        padding: 10px !important;
+        /* Restore padding */
+        break-inside: avoid;
+    }
+
+    .card-header *,
+    .card-header h5 {
+        color: black !important;
+        text-shadow: none !important;
+    }
+
+    .card-body {
+        padding: 10px !important;
+    }
+
+    /* Specific Fix for Chart Containers */
+    #quadrantChart,
+    #distributionChart {
+        min-height: 350px !important;
+        max-height: 400px !important;
+        width: 100% !important;
+    }
+
+    /* Ensure the parent div of canvas also has height */
+    canvas {
+        min-height: 350px !important;
+        width: 100% !important;
+    }
+
+    /* Allow cards to break across pages if they are long (like tables) */
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        margin-bottom: 2rem !important;
+        break-inside: auto;
+        /* Changed from avoid to allow breaking */
+        page-break-inside: auto;
+    }
+
+    .card-header {
+        background-color: #f8f9fa !important;
+        border-bottom: 1px solid #ddd !important;
+        break-inside: avoid;
+        /* Keep header intact */
+    }
+
+    /* Ensure charts print nicely */
+    canvas {
+        max-width: 100% !important;
+        max-height: 400px !important;
+        display: block !important;
+        page-break-inside: avoid;
+    }
+
+    img {
+        max-width: 100% !important;
+    }
+
+    /* Table optimizations */
+    .table-responsive {
+        overflow: visible !important;
+        /* Critical for repeating headers */
+        display: block !important;
+    }
+
+    .table {
+        font-size: 10pt;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        table-layout: auto;
+        margin-bottom: 0 !important;
+    }
+
+    .table thead {
+        display: table-header-group;
+        /* This works only if parent overflow is visible */
+    }
+
+    .table tfoot {
+        display: table-row-group;
+    }
+
+    .table tr {
+        break-inside: auto;
+        /* Allow rows to break if necessary, or avoid if small */
+        page-break-inside: auto;
+    }
+
+    .table td,
+    .table th {
+        background-color: #fff !important;
+        padding: 6px !important;
+        border: 1px solid #ddd !important;
+        /* Explicit border for print */
+        color: black !important;
+    }
+
+    /* Color accuracy for badges only */
+    .badge {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        border: 1px solid #000;
+        /* Border for contrast if color is lost */
+    }
+
+    a {
+        text-decoration: none !important;
+        color: black !important;
+    }
+
+    /* Remove scrollbars */
+    .card-body {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+}
+
+/* Loading animation */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Utility classes */
+.text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-sm-hover:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+/* List groups */
+.list-group-item {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    margin-bottom: 0.5rem;
+    border-radius: 8px !important;
+}
+
+.list-group-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Success/Error states */
+.is-valid {
+    border-color: #28a745 !important;
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Tooltips */
+.tooltip-inner {
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.9rem;
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 15px 15px 0 0;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+}
