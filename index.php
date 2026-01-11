@@ -684,6 +684,7 @@ try {
                     </div>
                     
                     <!-- Indicator Coverage Analysis -->
+                    <?php if ($selected_grade && $selected_subject): ?>
                     <div class="col-12 mb-4 page-break">
                         <div class="card">
                             <div class="card-header bg-warning text-dark">
@@ -938,9 +939,9 @@ try {
                                         </div>
                                     <?php endif; ?>
                                 <?php endif; ?>
-                            </div>
                         </div>
                     </div>
+                    <?php endif; ?>
                     
                     <!-- Student Segmentation -->
                     <div class="col-12 mb-4 page-break">
