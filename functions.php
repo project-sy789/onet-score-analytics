@@ -446,7 +446,15 @@ function segmentStudentsBySubject($pdo, $subject, $grade_level = null, $room_num
     if (file_exists($settings_file)) {
         $settings = json_decode(file_get_contents($settings_file), true);
         // Use subject-specific threshold if available
-        if (isset($settings['subject_indicator_pass_thresholds'][$subject])) {
+        // Use subject-specific threshold if available (Check Specific Grade -> Subject Default -> Global)
+        $lookup_key = $subject;
+        if ($grade_level) {
+            $lookup_key .= '|' . $grade_level;
+        }
+        
+        if (isset($settings['subject_indicator_pass_thresholds'][$lookup_key])) {
+            $indicator_pass_threshold = $settings['subject_indicator_pass_thresholds'][$lookup_key];
+        } elseif (isset($settings['subject_indicator_pass_thresholds'][$subject])) {
             $indicator_pass_threshold = $settings['subject_indicator_pass_thresholds'][$subject];
         } else {
             $indicator_pass_threshold = $settings['indicator_pass_threshold'] ?? 50;

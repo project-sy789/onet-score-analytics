@@ -105,6 +105,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new_config['mode'] = $grading_mode;
             
             $settings['subject_thresholds'][$key] = $new_config;
+            
+            // Save additional Subject/Grade specific thresholds
+            if (isset($_POST['subject_weakness_threshold']) && $_POST['subject_weakness_threshold'] !== '') {
+                if (!isset($settings['subject_weakness_thresholds'])) $settings['subject_weakness_thresholds'] = [];
+                $settings['subject_weakness_thresholds'][$key] = intval($_POST['subject_weakness_threshold']);
+            }
+            
+            if (isset($_POST['subject_strength_threshold']) && $_POST['subject_strength_threshold'] !== '') {
+                 if (!isset($settings['subject_strength_thresholds'])) $settings['subject_strength_thresholds'] = [];
+                 $settings['subject_strength_thresholds'][$key] = intval($_POST['subject_strength_threshold']);
+            }
+            
+            if (isset($_POST['subject_indicator_pass_threshold']) && $_POST['subject_indicator_pass_threshold'] !== '') {
+                 if (!isset($settings['subject_indicator_pass_thresholds'])) $settings['subject_indicator_pass_thresholds'] = [];
+                 $settings['subject_indicator_pass_thresholds'][$key] = intval($_POST['subject_indicator_pass_threshold']);
+            }
+
             file_put_contents($settings_file, json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
             
             $msg_subject = $subject . ($grade_level && $grade_level !== 'all' ? " ($grade_level)" : "");
@@ -574,7 +591,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <span class="badge bg-warning text-dark">จุดอ่อน</span>
                                         </label>
                                         <input type="number" step="0.01" class="form-control form-control-sm" name="subject_weakness_threshold" 
-                                               value="<?php echo $settings['subject_weakness_thresholds'][$subject] ?? $settings['weakness_threshold'] ?? 50; ?>" 
+                                               value="<?php echo $settings['subject_weakness_thresholds'][$lookup_key] ?? $settings['subject_weakness_thresholds'][$subject] ?? $settings['weakness_threshold'] ?? 50; ?>" 
                                                min="1" max="100">
                                     </div>
                                     <div class="col-md-2">
@@ -582,7 +599,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <span class="badge bg-success">จุดเด่น</span>
                                         </label>
                                         <input type="number" step="0.01" class="form-control form-control-sm" name="subject_strength_threshold" 
-                                               value="<?php echo $settings['subject_strength_thresholds'][$subject] ?? $settings['strength_threshold'] ?? 80; ?>" 
+                                               value="<?php echo $settings['subject_strength_thresholds'][$lookup_key] ?? $settings['subject_strength_thresholds'][$subject] ?? $settings['strength_threshold'] ?? 80; ?>" 
                                                min="1" max="100">
                                     </div>
                                     <div class="col-md-2 mt-2">
@@ -590,7 +607,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <span class="badge bg-info">ตัวชี้วัดผ่าน</span>
                                         </label>
                                         <input type="number" step="0.01" class="form-control form-control-sm" name="subject_indicator_pass_threshold" 
-                                               value="<?php echo $settings['subject_indicator_pass_thresholds'][$subject] ?? $settings['indicator_pass_threshold'] ?? 50; ?>" 
+                                               value="<?php echo $settings['subject_indicator_pass_thresholds'][$lookup_key] ?? $settings['subject_indicator_pass_thresholds'][$subject] ?? $settings['indicator_pass_threshold'] ?? 50; ?>" 
                                                min="1" max="100">
                                     </div>
                                     <div class="col-md-12 mt-3">
