@@ -5,25 +5,36 @@
  * Redirects to installer if config is missing
  */
 
-// Check if config.php exists
-if (!file_exists(__DIR__ . '/config.php')) {
-    // Redirect to installer
+// Check for Environment Variables (Cloud Deployment) first
+$db_host = getenv('DB_HOST');
+$db_name = getenv('DB_NAME');
+$db_user = getenv('DB_USER');
+$db_pass = getenv('DB_PASSWORD') ?: getenv('DB_PASS'); // Support both standard names
+
+if ($db_host && $db_name && $db_user) {
+    // Cloud Environment Detected - Config is already ready via Env Vars
+} elseif (file_exists(__DIR__ . '/config.php')) {
+    // Local Environment - Load from config.php
+    require_once __DIR__ . '/config.php';
+    $db_host = defined('DB_HOST') ? DB_HOST : null;
+    $db_name = defined('DB_NAME') ? DB_NAME : null;
+    $db_user = defined('DB_USER') ? DB_USER : null;
+    $db_pass = defined('DB_PASS') ? DB_PASS : null;
+} else {
+    // No config found -> Redirect to Installer
     header('Location: install.php');
     exit;
 }
 
-// Include database configuration
-require_once __DIR__ . '/config.php';
-
 try {
     // Create PDO connection - support both MySQL and SQLite
-    if (DB_HOST === 'sqlite') {
+    if ($db_host === 'sqlite') {
         // SQLite mode for demo
-        $pdo = new PDO('sqlite:' . DB_NAME);
+        $pdo = new PDO('sqlite:' . $db_name);
     } else {
         // MySQL mode for production
-        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
-        $pdo = new PDO($dsn, DB_USER, DB_PASS);
+        $dsn = "mysql:host=" . $db_host . ";dbname=" . $db_name . ";charset=utf8mb4";
+        $pdo = new PDO($dsn, $db_user, $db_pass);
     }
     
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
