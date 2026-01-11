@@ -403,8 +403,7 @@ try {
                                                 <th>ข้อที่</th>
                                                 <th>ตัวชี้วัด</th>
                                                 <th>คะแนนเต็ม</th>
-                                                <th class="text-center">Min</th>
-                                                <th class="text-center">Max</th>
+
                                                 <th class="text-center">Mean</th>
                                                 <th class="text-center">S.D.</th>
                                                 <th class="text-center">C.V.(%)</th>
@@ -484,8 +483,7 @@ try {
                                                     <td><?php echo (float)$max_score == (int)$max_score ? (int)$max_score : number_format($max_score, 2); ?></td>
                                                     
                                                     <!-- New Stats Columns -->
-                                                    <td class="text-center"><?php echo (float)$stats['min'] == (int)$stats['min'] ? (int)$stats['min'] : number_format($stats['min'], 2); ?></td>
-                                                    <td class="text-center"><?php echo (float)$stats['max'] == (int)$stats['max'] ? (int)$stats['max'] : number_format($stats['max'], 2); ?></td>
+
                                                     <td class="text-center"><?php echo number_format($stats['mean'], 2); ?></td>
                                                     <td class="text-center"><?php echo number_format($stats['sd'], 2); ?></td>
                                                     <td class="text-center"><?php echo number_format($stats['cv'], 2); ?>%</td>
@@ -508,8 +506,7 @@ try {
                                             ?>
                                             <tr class="table-dark fw-bold">
                                                 <td colspan="3" class="text-end">คะแนนรวมทั้งฉบับ (Total Score):</td>
-                                                <td class="text-center"><?php echo (float)$exam_stats['min'] == (int)$exam_stats['min'] ? (int)$exam_stats['min'] : number_format($exam_stats['min'], 2); ?></td>
-                                                <td class="text-center"><?php echo (float)$exam_stats['max'] == (int)$exam_stats['max'] ? (int)$exam_stats['max'] : number_format($exam_stats['max'], 2); ?></td>
+
                                                 <td class="text-center">
                                                     <?php 
                                                     echo number_format($exam_stats['mean'], 2); 
