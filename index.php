@@ -708,7 +708,7 @@ try {
                                 }
                                 
                                 // Get indicator coverage statistics
-                                // IMPORTANT: This aggregates across ALL exam_sets (no exam_set filter)
+                                // IMPORTANT: This aggregates across ALL exam_sets (no exam_set filter) unless specified
                                 $coverage_query = "
                                     SELECT 
                                         i.id,
@@ -746,10 +746,18 @@ try {
                                     LEFT JOIN question_indicators qi ON i.id = qi.indicator_id
                                     LEFT JOIN questions q ON qi.question_id = q.id
                                     LEFT JOIN scores s ON q.question_number = s.question_number AND q.exam_set = s.exam_set
-                                    WHERE 1=1
                                 ";
-                                
+
                                 $cov_params = [];
+
+                                // Apply Room Filter to Scores (must be done in JOIN to preserve indicators with no scores)
+                                if ($selected_room) {
+                                    $coverage_query .= " AND s.student_id IN (SELECT student_id FROM students WHERE grade_level = ? AND room_number = ?)";
+                                    $cov_params[] = $selected_grade; // Need grade too for unique room match usually, or just room? Schema has both.
+                                    $cov_params[] = $selected_room;
+                                }
+
+                                $coverage_query .= " WHERE 1=1";
                                 
                                 // Filter by grade level if selected
                                 if ($selected_grade) {
