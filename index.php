@@ -423,9 +423,9 @@ try {
                                                 // Only calculate if question exists in this exam set
                                                 // Check if score data exists for this question/exam_set combination to avoid division by zero or empty errors logic inside functions
                                                 
-                                                $p = calculateDifficultyIndex($pdo, $q_num, $selected_exam_set, $selected_grade);
-                                                $r = calculateDiscriminationIndex($pdo, $q_num, $selected_exam_set, $selected_grade);
-                                                $stats = calculateQuestionStats($pdo, $q_num, $selected_exam_set, $selected_grade); // New Stats
+                                                $p = calculateDifficultyIndex($pdo, $q_num, $selected_exam_set, $selected_grade, $selected_room);
+                                                $r = calculateDiscriminationIndex($pdo, $q_num, $selected_exam_set, $selected_grade, $selected_room);
+                                                $stats = calculateQuestionStats($pdo, $q_num, $selected_exam_set, $selected_grade, $selected_room); // New Stats
                                                 
                                                 if ($p > 0) { // Count items that have data (p=0 usually means no data or all wrong, but mostly no data if r also 0)
                                                     $sum_p += $p;

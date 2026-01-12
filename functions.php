@@ -719,7 +719,7 @@ function getAllSubjects($pdo) {
  * Calculate Basic Statistics for a Question
  * Returns Min, Max, Mean, SD, CV
  */
-function calculateQuestionStats($pdo, $question_number, $exam_set, $grade_level = null) {
+function calculateQuestionStats($pdo, $question_number, $exam_set, $grade_level = null, $room_number = null) {
     // Build Query
     $where = ["s.question_number = ?", "s.exam_set = ?"];
     $params = [$question_number, $exam_set];
@@ -729,6 +729,15 @@ function calculateQuestionStats($pdo, $question_number, $exam_set, $grade_level 
         $join = "JOIN students st ON s.student_id = st.student_id";
         $where[] = "st.grade_level = ?";
         $params[] = $grade_level;
+    }
+    
+    // Add Room Filter
+    if ($room_number) {
+        if (strpos($join, 'students') === false) {
+             $join = "JOIN students st ON s.student_id = st.student_id";
+        }
+        $where[] = "st.room_number = ?";
+        $params[] = $room_number;
     }
     
     $whereStr = implode(" AND ", $where);
@@ -957,7 +966,7 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null) {
  * Calculate Difficulty Index (p-value)
  * p = (Number of correct answers) / (Total students)
  */
-function calculateDifficultyIndex($pdo, $question_number, $exam_set, $grade_level = null) {
+function calculateDifficultyIndex($pdo, $question_number, $exam_set, $grade_level = null, $room_number = null) {
     // Get max_score for this question AND exam_set
     $max_sql = "SELECT max_score FROM questions WHERE question_number = ? AND exam_set = ?";
     $max_params = [$question_number, $exam_set];
@@ -973,24 +982,35 @@ function calculateDifficultyIndex($pdo, $question_number, $exam_set, $grade_leve
     
     if (!$max_score) return 0;
     
-    // Filter scores by grade_level if provided (Require JOIN with students)
-    if ($grade_level) {
-        $stmt = $pdo->prepare("
-            SELECT AVG(s.score_obtained / ?) as avg_proportion
-            FROM scores s
-            JOIN students st ON s.student_id = st.student_id
-            WHERE s.question_number = ? AND s.exam_set = ? AND st.grade_level = ?
-        ");
-        $stmt->execute([$max_score, $question_number, $exam_set, $grade_level]);
-    } else {
-        $stmt = $pdo->prepare("
-            SELECT AVG(score_obtained / ?) as avg_proportion
-            FROM scores
-            WHERE question_number = ? AND exam_set = ?
-        ");
-        $stmt->execute([$max_score, $question_number, $exam_set]);
+    // Build logic dynamically to support Room/Grade
+    $sql = "SELECT AVG(s.score_obtained / ?) as avg_proportion FROM scores s";
+    $params = [$max_score];
+    $where = ["s.question_number = ?", "s.exam_set = ?"];
+    $params[] = $question_number;
+    $params[] = $exam_set;
+    
+    $join = "";
+    
+    // Check if we need to join students (if filtering by grade or room)
+    if ($grade_level || $room_number) {
+        $join = " JOIN students st ON s.student_id = st.student_id";
+        
+        if ($grade_level) {
+            $where[] = "st.grade_level = ?";
+            $params[] = $grade_level;
+        }
+        
+        if ($room_number) {
+            $where[] = "st.room_number = ?";
+            $params[] = $room_number;
+        }
     }
     
+    $whereStr = implode(" AND ", $where);
+    $sql .= $join . " WHERE " . $whereStr;
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $result = $stmt->fetch();
     
     // p-value: mean proportion of maximum score achieved
@@ -1002,7 +1022,7 @@ function calculateDifficultyIndex($pdo, $question_number, $exam_set, $grade_leve
  * Calculate Discrimination Index (r-value)
  * Uses top 27% and bottom 27% method
  */
-function calculateDiscriminationIndex($pdo, $question_number, $exam_set, $grade_level = null) {
+function calculateDiscriminationIndex($pdo, $question_number, $exam_set, $grade_level = null, $room_number = null) {
     // Get max_score for this question AND exam_set
     $max_sql = "SELECT max_score FROM questions WHERE question_number = ? AND exam_set = ?";
     $max_params = [$question_number, $exam_set];
@@ -1025,17 +1045,28 @@ function calculateDiscriminationIndex($pdo, $question_number, $exam_set, $grade_
     ";
     
     $params_students = [];
-    if ($grade_level) {
-        $sql_students .= " JOIN students st ON s.student_id = st.student_id ";
-    }
-    
-    $sql_students .= " WHERE s.exam_set = ? ";
+    $joins = [];
+    $wheres = ["s.exam_set = ?"];
     $params_students[] = $exam_set;
     
-    if ($grade_level) {
-        $sql_students .= " AND st.grade_level = ? ";
-        $params_students[] = $grade_level;
+    if ($grade_level || $room_number) {
+        $joins[] = "JOIN students st ON s.student_id = st.student_id";
+        
+        if ($grade_level) {
+            $wheres[] = "st.grade_level = ?";
+            $params_students[] = $grade_level;
+        }
+        if ($room_number) {
+            $wheres[] = "st.room_number = ?";
+            $params_students[] = $room_number;
+        }
     }
+    
+    if (!empty($joins)) {
+        $sql_students .= " " . implode(" ", $joins) . " ";
+    }
+    
+    $sql_students .= " WHERE " . implode(" AND ", $wheres);
     
     $sql_students .= " GROUP BY s.student_id ORDER BY total_score DESC ";
     
