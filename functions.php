@@ -344,20 +344,22 @@ function segmentStudents($pdo, $grade_level = null, $room_number = null, $thresh
         } else {
             $percentage = safeDiv($student['total_score'], $student['total_possible'], 0) * 100;
             
-            // Determine tier based on percentile ranking
-            if ($percentage >= $p80) {
+            // Determine tier based on percentile ranking (using epsilon for float precision)
+            $epsilon = 0.0001;
+            
+            if ($percentage >= $p80 - $epsilon) {
                 $segment = 'ดีเยี่ยม';
                 $color = 'purple';
                 $rank = 1;
-            } elseif ($percentage >= $p60) {
+            } elseif ($percentage >= $p60 - $epsilon) {
                 $segment = 'ดี';
                 $color = 'success';
                 $rank = 2;
-            } elseif ($percentage >= $p40) {
+            } elseif ($percentage >= $p40 - $epsilon) {
                 $segment = 'ปานกลาง';
                 $color = 'info';
                 $rank = 3;
-            } elseif ($percentage >= $p20) {
+            } elseif ($percentage >= $p20 - $epsilon) {
                 $segment = 'ต้องพัฒนา';
                 $color = 'warning';
                 $rank = 4;
@@ -647,20 +649,22 @@ function segmentStudentsBySubject($pdo, $subject, $grade_level = null, $room_num
             // Calculate percentage for present students
             $percentage = safeDiv($student['total_score'], $student['total_possible'], 0) * 100;
             
-            // Determine tier based on percentile ranking
-            if ($percentage >= $p80) {
+            // Determine tier based on percentile ranking (using epsilon for float precision)
+            $epsilon = 0.0001;
+            
+            if ($percentage >= $p80 - $epsilon) {
                 $segment = 'ดีเยี่ยม';
                 $color = 'purple';
                 $rank = 1;
-            } elseif ($percentage >= $p60) {
+            } elseif ($percentage >= $p60 - $epsilon) {
                 $segment = 'ดี';
                 $color = 'success';
                 $rank = 2;
-            } elseif ($percentage >= $p40) {
+            } elseif ($percentage >= $p40 - $epsilon) {
                 $segment = 'ปานกลาง';
                 $color = 'info';
                 $rank = 3;
-            } elseif ($percentage >= $p20) {
+            } elseif ($percentage >= $p20 - $epsilon) {
                 $segment = 'ต้องพัฒนา';
                 $color = 'warning';
                 $rank = 4;
