@@ -47,10 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $grading_mode = $_POST['default_mode'] ?? 'percentile';
         
         $new_thresholds = [
-            'p80' => intval($_POST['default_p80']),
-            'p60' => intval($_POST['default_p60']),
-            'p40' => intval($_POST['default_p40']),
-            'p20' => intval($_POST['default_p20'])
+            'p80' => floatval($_POST['default_p80']),
+            'p60' => floatval($_POST['default_p60']),
+            'p40' => floatval($_POST['default_p40']),
+            'p20' => floatval($_POST['default_p20'])
         ];
         
         // Validate logic: Must be descending
@@ -86,10 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $grading_mode = $_POST['subject_mode'] ?? 'percentile';
         
         $new_thresholds = [
-            'p80' => intval($_POST['subject_p80']),
-            'p60' => intval($_POST['subject_p60']),
-            'p40' => intval($_POST['subject_p40']),
-            'p20' => intval($_POST['subject_p20'])
+            'p80' => floatval($_POST['subject_p80']),
+            'p60' => floatval($_POST['subject_p60']),
+            'p40' => floatval($_POST['subject_p40']),
+            'p20' => floatval($_POST['subject_p20'])
         ];
         
         if ($new_thresholds['p80'] > $new_thresholds['p60'] &&
@@ -109,17 +109,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Save additional Subject/Grade specific thresholds
             if (isset($_POST['subject_weakness_threshold']) && $_POST['subject_weakness_threshold'] !== '') {
                 if (!isset($settings['subject_weakness_thresholds'])) $settings['subject_weakness_thresholds'] = [];
-                $settings['subject_weakness_thresholds'][$key] = intval($_POST['subject_weakness_threshold']);
+                $settings['subject_weakness_thresholds'][$key] = floatval($_POST['subject_weakness_threshold']);
             }
             
             if (isset($_POST['subject_strength_threshold']) && $_POST['subject_strength_threshold'] !== '') {
                  if (!isset($settings['subject_strength_thresholds'])) $settings['subject_strength_thresholds'] = [];
-                 $settings['subject_strength_thresholds'][$key] = intval($_POST['subject_strength_threshold']);
+                 $settings['subject_strength_thresholds'][$key] = floatval($_POST['subject_strength_threshold']);
             }
             
             if (isset($_POST['subject_indicator_pass_threshold']) && $_POST['subject_indicator_pass_threshold'] !== '') {
                  if (!isset($settings['subject_indicator_pass_thresholds'])) $settings['subject_indicator_pass_thresholds'] = [];
-                 $settings['subject_indicator_pass_thresholds'][$key] = intval($_POST['subject_indicator_pass_threshold']);
+                 $settings['subject_indicator_pass_thresholds'][$key] = floatval($_POST['subject_indicator_pass_threshold']);
             }
 
             file_put_contents($settings_file, json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (isset($_POST['save_weakness'])) {
         // Save global weakness threshold
-        $weakness_threshold = intval($_POST['weakness_threshold']);
+        $weakness_threshold = floatval($_POST['weakness_threshold']);
         
         if ($weakness_threshold > 0 && $weakness_threshold <= 100) {
             $settings['weakness_threshold'] = $weakness_threshold;
@@ -171,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['save_subject_weakness'])) {
         // Save subject-specific weakness threshold
         $subject = $_POST['subject'];
-        $weakness_threshold = intval($_POST['subject_weakness_threshold']);
+        $weakness_threshold = floatval($_POST['subject_weakness_threshold']);
         
         if ($weakness_threshold > 0 && $weakness_threshold <= 100) {
             if (!isset($settings['subject_weakness_thresholds'])) {
@@ -190,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (isset($_POST['save_strength'])) {
         // Save global strength threshold
-        $strength_threshold = intval($_POST['strength_threshold']);
+        $strength_threshold = floatval($_POST['strength_threshold']);
         
         if ($strength_threshold > 0 && $strength_threshold <= 100) {
             $settings['strength_threshold'] = $strength_threshold;
@@ -206,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (isset($_POST['save_indicator_pass'])) {
         // Save indicator pass threshold for Quadrant Analysis
-        $indicator_pass_threshold = intval($_POST['indicator_pass_threshold']);
+        $indicator_pass_threshold = floatval($_POST['indicator_pass_threshold']);
         
         if ($indicator_pass_threshold > 0 && $indicator_pass_threshold <= 100) {
             $settings['indicator_pass_threshold'] = $indicator_pass_threshold;
@@ -223,7 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['save_subject_strength'])) {
         // Save subject-specific strength threshold
         $subject = $_POST['subject'];
-        $strength_threshold = intval($_POST['subject_strength_threshold']);
+        $strength_threshold = floatval($_POST['subject_strength_threshold']);
         
         if ($strength_threshold > 0 && $strength_threshold <= 100) {
             if (!isset($settings['subject_strength_thresholds'])) {
@@ -243,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['save_subject_indicator_pass'])) {
         // Save subject-specific indicator pass threshold
         $subject = $_POST['subject'];
-        $indicator_pass_threshold = intval($_POST['subject_indicator_pass_threshold']);
+        $indicator_pass_threshold = floatval($_POST['subject_indicator_pass_threshold']);
         
         if ($indicator_pass_threshold > 0 && $indicator_pass_threshold <= 100) {
             if (!isset($settings['subject_indicator_pass_thresholds'])) {
