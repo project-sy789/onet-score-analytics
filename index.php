@@ -599,7 +599,7 @@ try {
                                 <?php
                                 else:
                                     // Get Distribution Data
-                                    $dist_data = getScoreDistribution($pdo, $selected_exam_set, $selected_grade);
+                                    $dist_data = getScoreDistribution($pdo, $selected_exam_set, $selected_grade, $selected_room);
                                     
                                     if (empty($dist_data['data']) || array_sum($dist_data['data']) == 0):
                                 ?>

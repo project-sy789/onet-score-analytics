@@ -884,7 +884,7 @@ function calculateExamOverviewStats($pdo, $exam_set, $grade_level = null, $room_
 /**
  * Get Score Distribution for Histogram (10 Bins)
  */
-function getScoreDistribution($pdo, $exam_set, $grade_level = null) {
+function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number = null) {
     // Reuse query logic from OverviewStats but fetch all scores
     $where = ["s.exam_set = ?"];
     $params = [$exam_set];
@@ -894,6 +894,14 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null) {
         $join = "JOIN students st ON s.student_id = st.student_id";
         $where[] = "st.grade_level = ?";
         $params[] = $grade_level;
+    }
+    
+    if ($room_number) {
+        if (strpos($join, 'students') === false) {
+             $join = "JOIN students st ON s.student_id = st.student_id";
+        }
+        $where[] = "st.room_number = ?";
+        $params[] = $room_number;
     }
     
     $whereStr = implode(" AND ", $where);
