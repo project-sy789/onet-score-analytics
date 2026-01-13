@@ -901,8 +901,6 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
     }
     
     if ($room_number) {
-        // If room is selected, ensure we filter by it
-        // Note: The join is already added above
         $where[] = "st.room_number = ?";
         $params[] = $room_number;
     }
@@ -930,7 +928,7 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
     $min = floor(min($scores_only));
     $max = ceil(max($scores_only));
     
-    // Auto-calculate bin width (approx 10 bins)
+    // Auto-calculate bin width (approx 10 steps)
     $range = $max - $min;
     if ($range <= 0) $range = 1;
     
@@ -943,13 +941,16 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
     $labels = [];
     
     // Initialize bins and labels
+    // Create bins starting from min
     $current = $min;
+    
     // Safety break loop
     $maxLoops = 20; 
     $i = 0;
     while ($current <= $max && $i < $maxLoops) {
         $end = $current + $step;
-        // Label formatting: 0-9, 10-19 etc if step is integer
+        
+        // Label formatting
         if ($step >= 1 && floor($step) == $step) {
              $label = "$current - " . ($current + $step - 1); 
         } else {
@@ -958,7 +959,7 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
         
         $labels[] = $label;
         $bins[] = 0;
-        $bins_names[] = []; // Init empty array for names
+        $bins_names[] = []; // Init empty array for names at this index
         
         $current += $step;
         $i++;
@@ -967,21 +968,27 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
     // Populate bins
     foreach ($result as $row) {
         $score = (float)$row['total_score'];
-        $name = $row['name'];
+        $name = $row['name'] ?? 'Unknown';
         
         $binIndex = floor(($score - $min) / $step);
         
         // Safety checks for index bounds
+        // If score equals max (which is start of next bin potentially), put in last bin
+        // But our loop goes up to max. 
+        // Example: Min 0, Max 10, Step 1. Bins: 0-0, 1-1... 10-10. Count 11.
+        // Score 10. (10-0)/1 = 10. Index 10. Correct.
+        
         if ($binIndex >= count($bins)) $binIndex = count($bins) - 1; 
         if ($binIndex < 0) $binIndex = 0;
         
         $bins[$binIndex]++;
         
         // Add name to the corresponding bin
-        // Only add if not empty
-        if (!empty($name)) {
-            $bins_names[$binIndex][] = htmlspecialchars($name) . " (" . $score . ")";
+        // Add robust checking
+        if (!isset($bins_names[$binIndex])) {
+            $bins_names[$binIndex] = [];
         }
+        $bins_names[$binIndex][] = htmlspecialchars($name) . " (" . $score . ")";
     }
     
     return [

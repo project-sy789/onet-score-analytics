@@ -643,9 +643,11 @@ try {
                                                     plugins: {
                                                         tooltip: {
                                                             callbacks: {
-                                                                afterBody: function(context) {
+                                                                footer: function(context) {
                                                                     const dataIndex = context[0].dataIndex;
-                                                                    const names = distNames[dataIndex];
+                                                                    // Check if distNames is array or object and access safely
+                                                                    const names = distNames ? distNames[dataIndex] : null;
+                                                                    
                                                                     if (names && names.length > 0) {
                                                                         // Show max 15 names
                                                                         const maxShow = 15;
@@ -653,7 +655,7 @@ try {
                                                                         if (names.length > maxShow) {
                                                                             displayNames.push('...และอีก ' + (names.length - maxShow) + ' คน');
                                                                         }
-                                                                        return '\nรายชื่อนักเรียน:\n' + displayNames.join('\n');
+                                                                        return '\nรายชื่อนักเรียน (' + names.length + ' คน):\n' + displayNames.join('\n');
                                                                     }
                                                                     return '';
                                                                 }
