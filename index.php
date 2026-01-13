@@ -708,7 +708,19 @@ try {
                                 }
                                 
                                 // Get indicator coverage statistics
-                                // IMPORTANT: This aggregates across ALL exam_sets (no exam_set filter) unless specified
+                                // Refactored to properly show Uncovered Indicators even when Filtering by Exam Set
+                                
+                                $exam_set_condition = "";
+                                
+                                if ($selected_exam_set) {
+                                    $exam_set_condition = "AND q.exam_set = ?";
+                                    // Params will be added in order. We need to be careful with bind order.
+                                    // The placeholders are entering the query string at specific points.
+                                }
+                                
+                                // To handle params correctly with dynamic injection, we'll rebuild the params array completely
+                                $cov_params = [];
+                                
                                 $coverage_query = "
                                     SELECT 
                                         i.id,
@@ -744,16 +756,19 @@ try {
 
                                     FROM indicators i
                                     LEFT JOIN question_indicators qi ON i.id = qi.indicator_id
-                                    LEFT JOIN questions q ON qi.question_id = q.id
+                                    LEFT JOIN questions q ON qi.question_id = q.id $exam_set_condition
                                     LEFT JOIN scores s ON q.question_number = s.question_number AND q.exam_set = s.exam_set
                                 ";
-
-                                $cov_params = [];
+                                
+                                // Add Exam Set param if condition exists
+                                if ($selected_exam_set) {
+                                    $cov_params[] = $selected_exam_set;
+                                }
 
                                 // Apply Room Filter to Scores (must be done in JOIN to preserve indicators with no scores)
                                 if ($selected_room) {
                                     $coverage_query .= " AND s.student_id IN (SELECT student_id FROM students WHERE grade_level = ? AND room_number = ?)";
-                                    $cov_params[] = $selected_grade; // Need grade too for unique room match usually, or just room? Schema has both.
+                                    $cov_params[] = $selected_grade; 
                                     $cov_params[] = $selected_room;
                                 }
 
@@ -770,12 +785,7 @@ try {
                                     $cov_params[] = $selected_subject;
                                 }
                                 
-                                // Filter by exam_set if selected
-                                if ($selected_exam_set) {
-                                    // Filter questions by exam_set (or default if exam_set is 'default')
-                                    $coverage_query .= " AND q.exam_set = ?";
-                                    $cov_params[] = $selected_exam_set;
-                                }
+                                // Exam Set Filter is now in JOIN, so we don't add it to WHERE
                                 
                                 $coverage_query .= " GROUP BY i.code, i.description, i.subject, i.grade_level";
                                 
@@ -785,25 +795,36 @@ try {
                                     $cov_stmt->execute($cov_params);
                                     $indicator_coverage = $cov_stmt->fetchAll();
                                     
-                                    // Sort by question_count DESC, subject, code (natural sort)
+                                    // Sort Logic
                                     if (!empty($indicator_coverage)) {
                                         usort($indicator_coverage, function($a, $b) {
-                                            // First: sort by question count (descending)
-                                            if ($a['question_count'] != $b['question_count']) {
-                                                return $b['question_count'] - $a['question_count'];
-                                            }
-                                            // Second: sort by subject
-                                            if ($a['subject'] != $b['subject']) {
-                                                return strcmp($a['subject'], $b['subject']);
-                                            }
-                                            // Third: natural sort for code (handles numbers correctly)
-                                            // This ensures ว1.2 ม.1/2 comes before ว1.2 ม.1/10
+                                            // Priority 1: Subject
+                                            $sub = strcmp($a['subject'], $b['subject']);
+                                            if ($sub !== 0) return $sub;
+                                            
+                                            // Priority 2: Natural Sort Code
                                             return strnatcmp($a['code'], $b['code']);
                                         });
                                     }
+                                    
+                                    // Separate into Covered and Uncovered
+                                    $covered_indicators = [];
+                                    $uncovered_indicators = [];
+                                    
+                                    foreach ($indicator_coverage as $ind) {
+                                        if ($ind['question_count'] > 0) {
+                                            $covered_indicators[] = $ind;
+                                        } else {
+                                            $uncovered_indicators[] = $ind;
+                                        }
+                                    }
+                                    
+                                    // Use $covered_indicators for the main table now
+                                    $display_indicators = $covered_indicators;
+                                    
                                 } catch (PDOException $e) {
-                                    // Tables don't exist yet, show empty state
-                                    $indicator_coverage = [];
+                                    // Handle error
+                                    echo "Error: " . $e->getMessage();
                                 }
                                 
                                 if (empty($indicator_coverage)):
@@ -824,25 +845,35 @@ try {
                                         $subj = $ind['subject'];
                                         if (!isset($by_subject_cov[$subj])) {
                                             $by_subject_cov[$subj] = [
-                                                'indicators' => [],
+                                                'indicators' => [], // Covered only
+                                                'uncovered' => [],  // Uncovered
                                                 'total' => 0,
                                                 'covered' => 0,
                                                 'questions' => 0,
-                                                'never_tested' => 0
+                                                'high_frequency' => 0 // Track high frequency (>2 questions)
                                             ];
                                         }
-                                        $by_subject_cov[$subj]['indicators'][] = $ind;
+                                        
                                         $by_subject_cov[$subj]['total']++;
                                         $total_ind++;
                                         
                                         $q_cnt = $ind['question_count'];
+                                        
                                         if ($q_cnt > 0) {
+                                            // Add to Covered List
+                                            $by_subject_cov[$subj]['indicators'][] = $ind;
+                                            
                                             $by_subject_cov[$subj]['covered']++;
                                             $covered_ind++;
                                             $by_subject_cov[$subj]['questions'] += $q_cnt;
                                             $total_q += $q_cnt;
+                                            
+                                            if ($q_cnt >= 3) {
+                                                $by_subject_cov[$subj]['high_frequency']++;
+                                            }
                                         } else {
-                                            $by_subject_cov[$subj]['never_tested']++;
+                                            // Add to Uncovered List
+                                            $by_subject_cov[$subj]['uncovered'][] = $ind;
                                         }
                                     }
                                     
@@ -852,17 +883,20 @@ try {
                                         $subj_cov = safeDiv($data['covered'], $data['total'], 0) * 100;
                                     ?>
                                         <div class="mb-4">
-                                            <h6 class="border-bottom pb-2">
-                                                📚 <?php echo htmlspecialchars($subj); ?>
+                                            <h6 class="border-bottom pb-2 d-flex justify-content-between align-items-center">
+                                                <span>📚 <?php echo htmlspecialchars($subj); ?></span>
+                                                <span class="badge bg-light text-dark border">
+                                                    ครอบคลุม <?php echo number_format($subj_cov, 1); ?>%
+                                                </span>
                                             </h6>
                                             
                                             <div class="table-responsive">
-                                                <table class="table table-sm table-hover">
+                                                <table class="table table-sm table-hover align-middle">
                                                     <thead class="table-light">
                                                         <tr>
-                                                            <th style="width: 5%">ลำดับ</th>
-                                                            <th style="width: 12%">รหัสตัวชี้วัด</th>
-                                                            <th style="width: 30%">รายละเอียด</th>
+                                                            <th style="width: 5%" class="text-center">#</th>
+                                                            <th style="width: 15%">รหัสตัวชี้วัด</th>
+                                                            <th style="width: 40%">รายละเอียด</th>
                                                             <th style="width: 10%" class="text-center">คะแนนเฉลี่ย</th>
                                                             <th style="width: 10%" class="text-center">จำนวนข้อ</th>
                                                             <th style="width: 20%">ข้อสอบที่เกี่ยวข้อง</th>
@@ -873,38 +907,31 @@ try {
                                                         $rank = 1;
                                                         foreach ($data['indicators'] as $ind): 
                                                             $q_cnt = $ind['question_count'];
-                                                            $row_class = '';
-                                                            $badge_class = '';
+                                                            $avg_score = $ind['avg_score'];
                                                             
-                                                            if ($q_cnt > 0) {
-                                                                $badge_class = 'bg-success';
-                                                            } else {
-                                                                $row_class = 'table-light text-muted';
-                                                                $badge_class = 'bg-secondary';
+                                                            // Determine Badge Colors
+                                                            $score_badge = 'bg-secondary';
+                                                            if ($avg_score !== null) {
+                                                                if ($avg_score >= $strength_threshold) $score_badge = 'bg-success';
+                                                                elseif ($avg_score <= $weakness_threshold) $score_badge = 'bg-danger';
+                                                                else $score_badge = 'bg-warning text-dark';
                                                             }
                                                         ?>
-                                                                <tr class="<?php echo $row_class; ?>">
-                                                                <td class="text-center"><?php echo $rank++; ?></td>
+                                                            <tr>
+                                                                <td class="text-center text-muted"><?php echo $rank++; ?></td>
                                                                 <td>
-                                                                    <a href="#" onclick="viewIndicatorDetails(<?php echo $ind['id']; ?>); return false;" class="text-decoration-none text-dark">
-                                                                        <strong><?php echo htmlspecialchars(normalizeIndicatorCode($ind['code'])); ?></strong>
-                                                                    </a>
+                                                                    <span class="fw-bold text-dark">
+                                                                        <?php echo htmlspecialchars($ind['code']); ?>
+                                                                    </span>
                                                                 </td>
-                                                                <td><small><?php echo htmlspecialchars($ind['description']); ?></small></td>
+                                                                <td>
+                                                                    <small class="text-muted" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="<?php echo htmlspecialchars($ind['description']); ?>">
+                                                                        <?php echo htmlspecialchars($ind['description']); ?>
+                                                                    </small>
+                                                                </td>
                                                                 <td class="text-center">
-                                                                    <?php 
-                                                                    $avg_score = $ind['avg_score'];
-                                                                    if ($avg_score !== null && $q_cnt > 0):
-                                                                        $score_class = '';
-                                                                        if ($avg_score >= $strength_threshold) {
-                                                                            $score_class = 'bg-success';
-                                                                        } elseif ($avg_score >= $weakness_threshold) {
-                                                                            $score_class = 'bg-warning text-dark';
-                                                                        } else {
-                                                                            $score_class = 'bg-danger';
-                                                                        }
-                                                                    ?>
-                                                                        <span class="badge <?php echo $score_class; ?>">
+                                                                    <?php if ($avg_score !== null): ?>
+                                                                        <span class="badge <?php echo $score_badge; ?>" style="min-width: 50px;">
                                                                             <?php echo number_format($avg_score, 1); ?>%
                                                                         </span>
                                                                     <?php else: ?>
@@ -912,20 +939,69 @@ try {
                                                                     <?php endif; ?>
                                                                 </td>
                                                                 <td class="text-center">
-                                                                    <span class="badge <?php echo $badge_class; ?>">
-                                                                        <?php echo $q_cnt > 0 ? $q_cnt . ' ข้อ' : 'ไม่มี'; ?>
+                                                                    <span class="badge bg-primary rounded-pill">
+                                                                        <?php echo $q_cnt; ?>
                                                                     </span>
                                                                 </td>
                                                                 <td>
                                                                     <small class="text-muted">
-                                                                        <?php echo $ind['questions'] ?: '-'; ?>
+                                                                        <?php echo $ind['questions']; ?>
                                                                     </small>
                                                                 </td>
                                                             </tr>
                                                         <?php endforeach; ?>
+                                                        
+                                                        <?php if (empty($data['indicators'])): ?>
+                                                            <tr>
+                                                                <td colspan="6" class="text-center text-muted py-3">
+                                                                    <i>ไม่มีตัวชี้วัดที่ถูกสอบในวิชานี้</i>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endif; ?>
                                                     </tbody>
                                                 </table>
                                             </div>
+                                            
+                                            <!-- Uncovered Indicators Accordion -->
+                                            <?php if (!empty($data['uncovered'])): ?>
+                                            <div class="accordion mt-2" id="accordionUncovered_<?php echo md5($subj); ?>">
+                                                <div class="accordion-item border-0 bg-light">
+                                                    <h2 class="accordion-header" id="headingUncovered_<?php echo md5($subj); ?>">
+                                                        <button class="accordion-button collapsed py-2 bg-light text-secondary small shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUncovered_<?php echo md5($subj); ?>" aria-expanded="false" aria-controls="collapseUncovered_<?php echo md5($subj); ?>">
+                                                            <i class="bi bi-eye-slash me-2"></i> 
+                                                            ดูตัวชี้วัดที่ไม่ได้ออกข้อสอบ (<?php echo count($data['uncovered']); ?> รายการ)
+                                                        </button>
+                                                    </h2>
+                                                    <div id="collapseUncovered_<?php echo md5($subj); ?>" class="accordion-collapse collapse" aria-labelledby="headingUncovered_<?php echo md5($subj); ?>" data-bs-parent="#accordionUncovered_<?php echo md5($subj); ?>">
+                                                        <div class="accordion-body p-0">
+                                                            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                                                <table class="table table-sm table-borderless mb-0 small text-muted">
+                                                                    <thead class="text-secondary border-bottom">
+                                                                        <tr>
+                                                                            <th style="width: 20%" class="ps-4">รหัส</th>
+                                                                            <th class="ps-3">คำอธิบาย</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <?php foreach ($data['uncovered'] as $u_ind): ?>
+                                                                        <tr>
+                                                                            <td class="ps-4 border-bottom-0">
+                                                                                <?php echo htmlspecialchars($u_ind['code']); ?>
+                                                                            </td>
+                                                                            <td class="ps-3 border-bottom-0">
+                                                                                <?php echo htmlspecialchars($u_ind['description']); ?>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <?php endforeach; ?>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <?php endif; ?>
+                                            
                                         </div>
                                     <?php endforeach; ?>
                                     
@@ -936,13 +1012,12 @@ try {
                                     }
                                     if ($high_freq_total > 0): 
                                     ?>
-                                        <div class="alert alert-danger">
+                                        <div class="alert alert-danger mt-3">
                                             <h6><strong>🎯 คำแนะนำการสอน:</strong></h6>
-                                            <ul class="mb-0">
+                                            <ul class="mb-0 small">
                                                 <li>มีตัวชี้วัด <strong class="text-danger"><?php echo $high_freq_total; ?> ตัว</strong> ที่ออกข้อสอบบ่อย (≥3 ข้อ) 
                                                     <strong>ควรเน้นสอนและฝึกฝนเป็นพิเศษ</strong></li>
                                                 <li>ตัวชี้วัดที่ไม่เคยออกอาจไม่สำคัญหรือยังไม่ถึงคิว แต่ก็ควรสอนให้ครบตามหลักสูตร</li>
-                                                <li>ใช้ข้อมูลนี้ประกอบการวางแผนการสอนและจัดสรรเวลาให้เหมาะสม</li>
                                             </ul>
                                         </div>
                                     <?php endif; ?>
