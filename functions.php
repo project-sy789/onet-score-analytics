@@ -997,7 +997,7 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
     return [
         'labels' => $labels,
         'data' => $bins,
-        'names' => $bins_names
+        'names' => array_values($bins_names)
     ];
 }
 
