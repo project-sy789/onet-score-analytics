@@ -618,7 +618,23 @@ try {
                                     <script>
                                         var distLabels = <?php echo json_encode($dist_data['labels']); ?>;
                                         var distData = <?php echo json_encode($dist_data['data']); ?>;
+                                        var distLabels = <?php echo json_encode($dist_data['labels']); ?>;
+                                        var distData = <?php echo json_encode($dist_data['data']); ?>;
                                         var distNames = <?php echo json_encode($dist_data['names'] ?? [], JSON_UNESCAPED_UNICODE); ?>; // Student Names per bin
+                                    </script>
+                                    
+                                    <!-- DEBUG: Check Data -->
+                                    <details class="text-muted small mt-2">
+                                        <summary>คลิกเพื่อดูข้อมูลดิบ (สำหรับตรวจสอบ)</summary>
+                                        <div class="card card-body bg-light">
+                                            <p><strong>ชื่อนักเรียนในแต่ละแท่งกราฟ:</strong></p>
+                                            <code style="word-wrap: break-word;">
+                                                <?php echo htmlspecialchars(json_encode($dist_data['names'] ?? [], JSON_UNESCAPED_UNICODE)); ?>
+                                            </code>
+                                        </div>
+                                    </details>
+                                    
+                                    <script>
                                         
                                         // Initialize Chart immediately
                                         if (document.getElementById('distributionChart')) {
