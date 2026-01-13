@@ -979,9 +979,9 @@ try {
                                                             <tr>
                                                                 <td class="text-center text-muted"><?php echo $rank++; ?></td>
                                                                 <td>
-                                                                    <span class="fw-bold text-dark">
+                                                                    <a href="#" onclick="viewIndicatorDetails(<?php echo $ind['id']; ?>); return false;" class="text-decoration-none text-dark fw-bold">
                                                                         <?php echo htmlspecialchars($ind['code']); ?>
-                                                                    </span>
+                                                                    </a>
                                                                 </td>
                                                                 <td>
                                                                     <small class="text-muted" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="<?php echo htmlspecialchars($ind['description']); ?>">
