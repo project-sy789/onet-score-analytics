@@ -531,7 +531,7 @@ function importScores($pdo, $file, $subject, $exam_set = 'default', $grade_level
     if ($col_count != ($questions_count + 1) && $col_count != $questions_count) {
         $q_list = implode(', ', $questions);
         $db_debug = defined('DB_NAME') ? DB_NAME : 'unknown';
-        throw new Exception("DEBUG INFO: DB=$db_debug\nJumlah Kolom File: $col_count (คาดหวัง " . ($questions_count + 1) . " หรือ $questions_count)\nคำถามในระบบ ($questions_count ข้อ): $q_list\nเงื่อนไข: $subject / $exam_set / Level: $grade_level");
+        throw new Exception("ข้อมูลเชิงเทคนิค (Debug Info):\nฐานข้อมูล: $db_debug\nจำนวนคอลัมน์ที่พบ: $col_count (ระบบต้องการ " . ($questions_count + 1) . " หรือ $questions_count)\nจำนวนข้อสอบในระบบ ($questions_count ข้อ): $q_list\nเงื่อนไข: $subject / $exam_set / Level: $grade_level\n\nคำแนะนำ: ไฟล์ CSV ควรมีคอลัมน์แรกเป็นรหัสนักเรียน และตามด้วยคะแนนแต่ละข้อเท่านั้น (รวม " . ($questions_count + 1) . " คอลัมน์) หากมีคอลัมน์ 'ลำดับ', 'ชื่อ', หรือ 'นามสกุล' ให้ลบออกครับ");
     }
     // Smart Header Detection
     // If the first column (Student ID) is numeric, assume it's DATA, not Header
