@@ -676,6 +676,13 @@ try {
                                                                     return '';
                                                                 }
                                                             }
+                                                        },
+                                                        legend: {
+                                                            position: 'top',
+                                                        },
+                                                        title: {
+                                                            display: true,
+                                                            text: 'การกระจายตัวของคะแนนรวม (Total Score Distribution)'
                                                         }
                                                     },
                                                     scales: {
@@ -697,22 +704,7 @@ try {
                                                             }
                                                         }
                                                     },
-                                                    plugins: {
-                                                        legend: {
-                                                            position: 'top',
-                                                        },
-                                                        tooltip: {
-                                                            callbacks: {
-                                                                label: function(context) {
-                                                                    return context.parsed.y + ' คน';
-                                                                }
-                                                            }
-                                                        },
-                                                        title: {
-                                                            display: true,
-                                                            text: 'การกระจายตัวของคะแนนรวม (Total Score Distribution)'
-                                                        }
-                                                    }
+
                                                 }
                                             });
                                         }
