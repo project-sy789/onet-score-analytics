@@ -889,68 +889,46 @@ function calculateExamOverviewStats($pdo, $exam_set, $grade_level = null, $room_
  * Get Score Distribution for Histogram (10 Bins)
  */
 function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number = null) {
-    // Reuse query logic from OverviewStats but fetch all scores
+    // 1. Get Total Max Score for this Exam Set
+    $max_stmt = $pdo->prepare("SELECT SUM(max_score) FROM questions WHERE exam_set = ?");
+    $max_stmt->execute([$exam_set]);
+    $total_possible = $max_stmt->fetchColumn();
+    $total_possible = $total_possible ? (float)$total_possible : 0;
+    
+    // 2. Get Student Scores
     $where = ["s.exam_set = ?"];
     $params = [$exam_set];
     
-    $join = "";
+    // Always join students to get names
+    $join = "JOIN students st ON s.student_id = st.student_id";
+    
     if ($grade_level) {
-        $join = "JOIN students st ON s.student_id = st.student_id";
         $where[] = "st.grade_level = ?";
         $params[] = $grade_level;
     }
     
     if ($room_number) {
-        if (strpos($join, 'students') === false) {
-             $join = "JOIN students st ON s.student_id = st.student_id";
-        }
         $where[] = "st.room_number = ?";
         $params[] = $room_number;
     }
     
     $whereStr = implode(" AND ", $where);
     
-    $sql = "SELECT SUM(s.score_obtained) as total_score 
+    // Select name and total score
+    $sql = "SELECT st.name, SUM(s.score_obtained) as total_score 
             FROM scores s 
             $join 
             WHERE $whereStr 
-            GROUP BY s.student_id
+            GROUP BY s.student_id, st.name
             ORDER BY total_score ASC";
             
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
-    $scores = array_map('floatval', $stmt->fetchAll(PDO::FETCH_COLUMN));
-    
-    if (empty($scores)) return ['labels' => [], 'data' => []];
-    
-    $min = floor(min($scores));
-    $max = ceil(max($scores));
-    
-    // Auto-calculate bin width (approx 10 bins)
-    $range = $max - $min;
-    if ($range <= 0) $range = 1;
-    
-    $binCount = 10;
-    $step = ceil($range / $binCount);
-    if ($step < 1) $step = 1;
-    
-    // Adjust bin count based on step
-    // e.g. Min 0, Max 10, Step 1 -> 10 bins.
-    
-    $bins = [];
-    $labels = [];
-    
-    // Initialize bins
     $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     if (empty($result)) return ['labels' => [], 'data' => [], 'names' => []];
     
     // Initialize bins (0-9, 10-19, ..., 90-100)
-    // Actually typically 0-10, 11-20? Or 0-9, 10-19...
-    // Let's stick to 10-point bins: 0-9, 10-19, ..., 90-99, 100
-    // Or standard 0-10, 10.1-20...
-    // Let's use simple floor(score / 10)
-    
     $bins = array_fill(0, 11, 0); // Indexes 0 to 10
     $bins_names = array_fill(0, 11, []); // Store names for each bin
     
@@ -962,12 +940,12 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
     foreach ($result as $row) {
         // Calculate percentage score
         $raw_score = $row['total_score'];
-        $max_score = $row['total_max_score'];
-        $score_pct = ($max_score > 0) ? ($raw_score / $max_score) * 100 : 0;
+        // Use total_possible calculated earlier
+        $score_pct = ($total_possible > 0) ? ($raw_score / $total_possible) * 100 : 0;
         
         $bin_index = floor($score_pct / 10);
-        if ($bin_index > 10) $bin_index = 10; // Should not happen usually
-        if ($score_pct == 100) $bin_index = 10; // 100 goes to last bin
+        if ($bin_index > 10) $bin_index = 10;
+        if ($score_pct >= 100) $bin_index = 10; // Handle 100% specifically to last bin
         
         $bins[$bin_index]++;
         
