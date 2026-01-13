@@ -800,14 +800,50 @@ try {
                                     $indicator_coverage = $cov_stmt->fetchAll();
                                     
                                     // Sort Logic
+                                    $sort_col = $_GET['sort_col'] ?? 'code';
+                                    $sort_dir = $_GET['sort_dir'] ?? 'asc';
+                                    
                                     if (!empty($indicator_coverage)) {
-                                        usort($indicator_coverage, function($a, $b) {
-                                            // Priority 1: Subject
-                                            $sub = strcmp($a['subject'], $b['subject']);
-                                            if ($sub !== 0) return $sub;
+                                        usort($indicator_coverage, function($a, $b) use ($sort_col, $sort_dir) {
+                                            $result = 0;
                                             
-                                            // Priority 2: Natural Sort Code
-                                            return strnatcmp($a['code'], $b['code']);
+                                            // Handling Sort Columns
+                                            if ($sort_col === 'score') {
+                                                // Handle NULL scores (treat as lowest rank usually)
+                                                $score_a = $a['avg_score'];
+                                                $score_b = $b['avg_score'];
+                                                
+                                                if ($score_a === $score_b) {
+                                                    $result = 0;
+                                                } elseif ($score_a === null) {
+                                                    $result = -1; // Null is always "less" than a number
+                                                } elseif ($score_b === null) {
+                                                    $result = 1; 
+                                                } else {
+                                                    $result = ($score_a < $score_b) ? -1 : 1;
+                                                }
+                                            } else {
+                                                // Default: Sort by Code (Priority 2)
+                                                // Priority 1: Subject (Always group by subject first if mixed? Actually loop logic groups by subject later.)
+                                                // However, usort on the raw array affects the order inside the group if we group strictly by array order.
+                                                // BUT, the loop below iterates $indicator_coverage and pushes into $by_subject_cov.
+                                                // So sorting here DOES affect the order inside $by_subject_cov['indicators'].
+                                                
+                                                // Sort by Subject first (to keep groups together if not grouped by array)
+                                                // Actually the loop creates groups $by_subject_cov[$subj].
+                                                // So we just need to sort primarily by what the user wants, but if we don't sort by subject, the loop will still group them correctly.
+                                                // BUT the 'indicators' array inside each subject group will be sorted by finding order.
+                                                
+                                                // Recommendation: Sort by Subject ASC, then by User Criteria.
+                                                $cmp_sub = strcmp($a['subject'], $b['subject']);
+                                                if ($cmp_sub !== 0) return $cmp_sub;
+                                                
+                                                // Natural Sort Code
+                                                $result = strnatcmp($a['code'], $b['code']);
+                                            }
+                                            
+                                            // Apply Direction
+                                            return ($sort_dir === 'desc') ? -$result : $result;
                                         });
                                     }
                                     
@@ -899,9 +935,27 @@ try {
                                                     <thead class="table-light">
                                                         <tr>
                                                             <th style="width: 5%" class="text-center">#</th>
-                                                            <th style="width: 15%">รหัสตัวชี้วัด</th>
+                                                            <th style="width: 15%">
+                                                                <a href="?<?php echo http_build_query(array_merge($_GET, ['sort_col' => 'code', 'sort_dir' => ($sort_col === 'code' && $sort_dir === 'asc') ? 'desc' : 'asc'])); ?>" class="text-dark text-decoration-none">
+                                                                    รหัสตัวชี้วัด 
+                                                                    <?php if ($sort_col === 'code'): ?>
+                                                                        <i class="bi bi-arrow-<?php echo $sort_dir === 'asc' ? 'down' : 'up'; ?>"></i>
+                                                                    <?php else: ?>
+                                                                        <i class="bi bi-arrow-down-up text-muted small" style="opacity: 0.5;"></i>
+                                                                    <?php endif; ?>
+                                                                </a>
+                                                            </th>
                                                             <th style="width: 40%">รายละเอียด</th>
-                                                            <th style="width: 10%" class="text-center">คะแนนเฉลี่ย</th>
+                                                            <th style="width: 10%" class="text-center">
+                                                                <a href="?<?php echo http_build_query(array_merge($_GET, ['sort_col' => 'score', 'sort_dir' => ($sort_col === 'score' && $sort_dir === 'desc') ? 'asc' : 'desc'])); ?>" class="text-dark text-decoration-none">
+                                                                    คะแนนเฉลี่ย
+                                                                    <?php if ($sort_col === 'score'): ?>
+                                                                        <i class="bi bi-arrow-<?php echo $sort_dir === 'asc' ? 'up' : 'down'; ?>"></i>
+                                                                    <?php else: ?>
+                                                                        <i class="bi bi-arrow-down-up text-muted small" style="opacity: 0.5;"></i>
+                                                                    <?php endif; ?>
+                                                                </a>
+                                                            </th>
                                                             <th style="width: 10%" class="text-center">จำนวนข้อ</th>
                                                             <th style="width: 20%">ข้อสอบที่เกี่ยวข้อง</th>
                                                         </tr>
