@@ -618,7 +618,7 @@ try {
                                     <script>
                                         var distLabels = <?php echo json_encode($dist_data['labels']); ?>;
                                         var distData = <?php echo json_encode($dist_data['data']); ?>;
-                                        var distNames = <?php echo json_encode($dist_data['names'] ?? []); ?>; // Student Names per bin
+                                        var distNames = <?php echo json_encode($dist_data['names'] ?? [], JSON_UNESCAPED_UNICODE); ?>; // Student Names per bin
                                         
                                         // Initialize Chart immediately
                                         if (document.getElementById('distributionChart')) {

@@ -988,7 +988,10 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
         if (!isset($bins_names[$binIndex])) {
             $bins_names[$binIndex] = [];
         }
-        $bins_names[$binIndex][] = htmlspecialchars($name) . " (" . $score . ")";
+        
+        // Sanitize name to ensure valid UTF-8 (prevents json_encode failure)
+        $clean_name = mb_convert_encoding($name, 'UTF-8', 'UTF-8');
+        $bins_names[$binIndex][] = htmlspecialchars($clean_name) . " (" . $score . ")";
     }
     
     return [
