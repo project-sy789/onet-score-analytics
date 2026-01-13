@@ -785,7 +785,11 @@ try {
                                     $cov_params[] = $selected_subject;
                                 }
                                 
-                                // Exam Set Filter is now in JOIN, so we don't add it to WHERE
+                                // Filter indicators by Exam Set (Important: Only show indicators relevant to this set + defaults)
+                                if ($selected_exam_set) {
+                                    $coverage_query .= " AND (i.exam_set = ? OR i.exam_set = 'default' OR i.exam_set IS NULL)";
+                                    $cov_params[] = $selected_exam_set;
+                                }
                                 
                                 $coverage_query .= " GROUP BY i.code, i.description, i.subject, i.grade_level";
                                 
