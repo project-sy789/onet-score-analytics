@@ -675,7 +675,7 @@ try {
                                                         x: {
                                                             title: {
                                                                 display: true,
-                                                                text: 'ช่วงคะแนน (Score Range) %'
+                                                                text: 'ช่วงคะแนน (Score Range)'
                                                             }
                                                         }
                                                     },

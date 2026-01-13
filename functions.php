@@ -888,6 +888,7 @@ function calculateExamOverviewStats($pdo, $exam_set, $grade_level = null, $room_
 /**
  * Get Score Distribution for Histogram (10 Bins)
  */
+function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number = null) {
     // 1. Get raw scores and names
     // Always join students to get names
     $join = "JOIN students st ON s.student_id = st.student_id";
