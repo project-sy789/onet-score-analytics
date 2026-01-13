@@ -941,36 +941,46 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
     $labels = [];
     
     // Initialize bins
-    $current = $min;
-    // Safety break loop
-    $maxLoops = 20; 
-    $i = 0;
-    while ($current <= $max && $i < $maxLoops) {
-        $end = $current + $step;
-        $label = "$current - " . ($end - 0.01); // Display Range
-        // Use integer range display if step is integer
-        if ($step >= 1 && floor($step) == $step) {
-             $label = "$current - " . ($current + $step - 1); // e.g. 0-9
-        }
-        
-        $labels[] = $label;
-        $bins[] = 0;
-        
-        $current += $step;
-        $i++;
-    }
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Populate bins
-    foreach ($scores as $score) {
-        $binIndex = floor(($score - $min) / $step);
-        if ($binIndex >= count($bins)) $binIndex = count($bins) - 1; // Put max in last bin
-        if ($binIndex < 0) $binIndex = 0;
-        $bins[$binIndex]++;
+    if (empty($result)) return ['labels' => [], 'data' => [], 'names' => []];
+    
+    // Initialize bins (0-9, 10-19, ..., 90-100)
+    // Actually typically 0-10, 11-20? Or 0-9, 10-19...
+    // Let's stick to 10-point bins: 0-9, 10-19, ..., 90-99, 100
+    // Or standard 0-10, 10.1-20...
+    // Let's use simple floor(score / 10)
+    
+    $bins = array_fill(0, 11, 0); // Indexes 0 to 10
+    $bins_names = array_fill(0, 11, []); // Store names for each bin
+    
+    $labels = [
+        "0-9", "10-19", "20-29", "30-39", "40-49", 
+        "50-59", "60-69", "70-79", "80-89", "90-99", "100"
+    ];
+    
+    foreach ($result as $row) {
+        // Calculate percentage score
+        $raw_score = $row['total_score'];
+        $max_score = $row['total_max_score'];
+        $score_pct = ($max_score > 0) ? ($raw_score / $max_score) * 100 : 0;
+        
+        $bin_index = floor($score_pct / 10);
+        if ($bin_index > 10) $bin_index = 10; // Should not happen usually
+        if ($score_pct == 100) $bin_index = 10; // 100 goes to last bin
+        
+        $bins[$bin_index]++;
+        
+        // Add student name to bin
+        if (isset($row['name'])) {
+            $bins_names[$bin_index][] = htmlspecialchars($row['name']) . " (" . number_format($score_pct, 1) . "%)";
+        }
     }
     
     return [
         'labels' => $labels,
-        'data' => $bins
+        'data' => $bins,
+        'names' => $bins_names
     ];
 }
 

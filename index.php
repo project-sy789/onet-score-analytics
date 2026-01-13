@@ -618,6 +618,7 @@ try {
                                     <script>
                                         var distLabels = <?php echo json_encode($dist_data['labels']); ?>;
                                         var distData = <?php echo json_encode($dist_data['data']); ?>;
+                                        var distNames = <?php echo json_encode($dist_data['names'] ?? []); ?>; // Student Names per bin
                                         
                                         // Initialize Chart immediately
                                         if (document.getElementById('distributionChart')) {
@@ -639,6 +640,26 @@ try {
                                                 options: {
                                                     responsive: true,
                                                     maintainAspectRatio: false,
+                                                    plugins: {
+                                                        tooltip: {
+                                                            callbacks: {
+                                                                afterBody: function(context) {
+                                                                    const dataIndex = context[0].dataIndex;
+                                                                    const names = distNames[dataIndex];
+                                                                    if (names && names.length > 0) {
+                                                                        // Show max 15 names
+                                                                        const maxShow = 15;
+                                                                        let displayNames = names.slice(0, maxShow);
+                                                                        if (names.length > maxShow) {
+                                                                            displayNames.push('...และอีก ' + (names.length - maxShow) + ' คน');
+                                                                        }
+                                                                        return '\nรายชื่อนักเรียน:\n' + displayNames.join('\n');
+                                                                    }
+                                                                    return '';
+                                                                }
+                                                            }
+                                                        }
+                                                    },
                                                     scales: {
                                                         y: {
                                                             beginAtZero: true,
@@ -654,7 +675,7 @@ try {
                                                         x: {
                                                             title: {
                                                                 display: true,
-                                                                text: 'ช่วงคะแนน (Score Range)'
+                                                                text: 'ช่วงคะแนน (Score Range) %'
                                                             }
                                                         }
                                                     },
