@@ -31,14 +31,31 @@ if (empty($students)) {
     exit;
 }
 
-// Prepare thresholds (reuse logic if possible, or default to 50%)
-// Ideally read from settings, but for now specific hardcode or simple read
+// Prepare thresholds (Check Specific Grade -> Subject Default -> Global)
 $pass_threshold = 50; 
 $settings_file = __DIR__ . '/settings.json';
 if (file_exists($settings_file)) {
     $settings = json_decode(file_get_contents($settings_file), true);
-    if (isset($settings['subject_indicator_pass_thresholds'][$indicator['subject']])) {
-        $pass_threshold = $settings['subject_indicator_pass_thresholds'][$indicator['subject']];
+    
+    $subject = $indicator['subject'];
+    // Construct lookup key using the grade level passed from POST or derived from somewhere?
+    // We have $grade_level from line 12.
+    // However, if $grade_level is 'all' or empty, we default to just subject.
+    // The indicator itself has a grade_level column too ($indicator['grade_level']).
+    // It's safer to use the indicator's intrinsic grade level if available, but the filter might be overriding specific exam sets.
+    // Let's use the $grade_level passed in from the context (POST) if available, otherwise indicator's grade.
+    
+    $lookup_grade = $grade_level ?: ($indicator['grade_level'] ?? '');
+    
+    $lookup_key = $subject;
+    if ($lookup_grade && $lookup_grade !== 'all') {
+        $lookup_key .= '|' . $lookup_grade;
+    }
+
+    if (isset($settings['subject_indicator_pass_thresholds'][$lookup_key])) {
+        $pass_threshold = $settings['subject_indicator_pass_thresholds'][$lookup_key];
+    } elseif (isset($settings['subject_indicator_pass_thresholds'][$subject])) {
+        $pass_threshold = $settings['subject_indicator_pass_thresholds'][$subject];
     } elseif (isset($settings['indicator_pass_threshold'])) {
         $pass_threshold = $settings['indicator_pass_threshold'];
     }
