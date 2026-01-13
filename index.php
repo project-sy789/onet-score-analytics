@@ -980,7 +980,7 @@ try {
                                                                 <td class="text-center text-muted"><?php echo $rank++; ?></td>
                                                                 <td>
                                                                     <a href="#" onclick="viewIndicatorDetails(<?php echo $ind['id']; ?>); return false;" class="text-decoration-none text-dark fw-bold">
-                                                                        <?php echo htmlspecialchars($ind['code']); ?>
+                                                                        <?php echo htmlspecialchars(normalizeIndicatorCode($ind['code'])); ?>
                                                                     </a>
                                                                 </td>
                                                                 <td>
