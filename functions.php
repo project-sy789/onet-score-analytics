@@ -888,19 +888,11 @@ function calculateExamOverviewStats($pdo, $exam_set, $grade_level = null, $room_
 /**
  * Get Score Distribution for Histogram (10 Bins)
  */
-function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number = null) {
-    // 1. Get Total Max Score for this Exam Set
-    $max_stmt = $pdo->prepare("SELECT SUM(max_score) FROM questions WHERE exam_set = ?");
-    $max_stmt->execute([$exam_set]);
-    $total_possible = $max_stmt->fetchColumn();
-    $total_possible = $total_possible ? (float)$total_possible : 0;
-    
-    // 2. Get Student Scores
-    $where = ["s.exam_set = ?"];
-    $params = [$exam_set];
-    
+    // 1. Get raw scores and names
     // Always join students to get names
     $join = "JOIN students st ON s.student_id = st.student_id";
+    $where = ["s.exam_set = ?"];
+    $params = [$exam_set];
     
     if ($grade_level) {
         $where[] = "st.grade_level = ?";
@@ -908,6 +900,8 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
     }
     
     if ($room_number) {
+        // If room is selected, ensure we filter by it
+        // Note: The join is already added above
         $where[] = "st.room_number = ?";
         $params[] = $room_number;
     }
@@ -928,30 +922,64 @@ function getScoreDistribution($pdo, $exam_set, $grade_level = null, $room_number
     
     if (empty($result)) return ['labels' => [], 'data' => [], 'names' => []];
     
-    // Initialize bins (0-9, 10-19, ..., 90-100)
-    $bins = array_fill(0, 11, 0); // Indexes 0 to 10
-    $bins_names = array_fill(0, 11, []); // Store names for each bin
+    // Extract scores for calculation
+    $scores_only = array_column($result, 'total_score');
+    $scores_only = array_map('floatval', $scores_only);
     
-    $labels = [
-        "0-9", "10-19", "20-29", "30-39", "40-49", 
-        "50-59", "60-69", "70-79", "80-89", "90-99", "100"
-    ];
+    $min = floor(min($scores_only));
+    $max = ceil(max($scores_only));
     
+    // Auto-calculate bin width (approx 10 bins)
+    $range = $max - $min;
+    if ($range <= 0) $range = 1;
+    
+    $binCount = 10;
+    $step = ceil($range / $binCount);
+    if ($step < 1) $step = 1;
+    
+    $bins = [];
+    $bins_names = []; // Parallel array for names
+    $labels = [];
+    
+    // Initialize bins and labels
+    $current = $min;
+    // Safety break loop
+    $maxLoops = 20; 
+    $i = 0;
+    while ($current <= $max && $i < $maxLoops) {
+        $end = $current + $step;
+        // Label formatting: 0-9, 10-19 etc if step is integer
+        if ($step >= 1 && floor($step) == $step) {
+             $label = "$current - " . ($current + $step - 1); 
+        } else {
+             $label = "$current - " . ($end - 0.01);
+        }
+        
+        $labels[] = $label;
+        $bins[] = 0;
+        $bins_names[] = []; // Init empty array for names
+        
+        $current += $step;
+        $i++;
+    }
+    
+    // Populate bins
     foreach ($result as $row) {
-        // Calculate percentage score
-        $raw_score = $row['total_score'];
-        // Use total_possible calculated earlier
-        $score_pct = ($total_possible > 0) ? ($raw_score / $total_possible) * 100 : 0;
+        $score = (float)$row['total_score'];
+        $name = $row['name'];
         
-        $bin_index = floor($score_pct / 10);
-        if ($bin_index > 10) $bin_index = 10;
-        if ($score_pct >= 100) $bin_index = 10; // Handle 100% specifically to last bin
+        $binIndex = floor(($score - $min) / $step);
         
-        $bins[$bin_index]++;
+        // Safety checks for index bounds
+        if ($binIndex >= count($bins)) $binIndex = count($bins) - 1; 
+        if ($binIndex < 0) $binIndex = 0;
         
-        // Add student name to bin
-        if (isset($row['name'])) {
-            $bins_names[$bin_index][] = htmlspecialchars($row['name']) . " (" . number_format($score_pct, 1) . "%)";
+        $bins[$binIndex]++;
+        
+        // Add name to the corresponding bin
+        // Only add if not empty
+        if (!empty($name)) {
+            $bins_names[$binIndex][] = htmlspecialchars($name) . " (" . $score . ")";
         }
     }
     
