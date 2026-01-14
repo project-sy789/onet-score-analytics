@@ -278,13 +278,20 @@ canvas {
     }
 
     /* Enable Flex for Rows to allow Side-by-Side */
+    /* HYBRID APPROACH: Use Block for main layout (better page breaks), Flex for inner charts */
     .row {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        /* CHANGED: Allow wrapping so col-12s stack! */
+        display: block !important;
+        /* Main layout stacks */
         width: 100% !important;
         margin: 0 !important;
+    }
+
+    /* Only use Flexbox for nested rows inside cards (like the charts) */
+    .card-body .row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        /* Charts stay side-by-side */
     }
 
     /* Specific Widths for Chart Columns (Side-by-Side) */
