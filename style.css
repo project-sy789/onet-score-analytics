@@ -235,7 +235,7 @@ canvas {
         page-break-before: always !important;
         break-before: page !important;
         display: block;
-        height: 1px;
+        /* height: 1px;  REMOVED: This hides content if applied to a container */
     }
 
     .no-print {
