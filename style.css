@@ -363,8 +363,10 @@ canvas {
         max-height: none !important;
     }
 
-    div[style*="height: 300px"] {
+    div[style*="height: 300px"],
+    div[style*="height: 350px"] {
         height: auto !important;
+        min-height: 0 !important;
     }
 
     canvas {
