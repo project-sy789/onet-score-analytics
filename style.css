@@ -346,6 +346,15 @@ canvas {
         display: block !important;
         font-weight: bold !important;
         font-size: 11pt !important;
+        break-after: avoid !important;
+        page-break-after: avoid !important;
+    }
+
+    /* Prevent breaking inside chart columns */
+    .col-md-7,
+    .col-md-5 {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
     }
 
     img {
