@@ -234,8 +234,13 @@ canvas {
     .page-break {
         page-break-before: always !important;
         break-before: page !important;
-        display: block;
-        /* height: 1px;  REMOVED: This hides content if applied to a container */
+        display: block !important;
+        width: 100% !important;
+        /* Ensure it takes full width as flex item */
+        flex: 0 0 100% !important;
+        /* Force to be a full-width flex item */
+        margin-top: 0 !important;
+        /* Reset margin to let break work cleanly */
     }
 
     .no-print {
