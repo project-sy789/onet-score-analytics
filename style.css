@@ -300,6 +300,9 @@ canvas {
     .card {
         margin-bottom: 20px !important;
         border: 1px solid #ddd !important;
+        break-inside: auto;
+        /* Allow long cards (tables) to break */
+        page-break-inside: auto;
     }
 
     .card-header {
@@ -355,10 +358,18 @@ canvas {
     .card {
         box-shadow: none !important;
         border: 1px solid #ccc !important;
-        margin-bottom: 2rem !important;
+        margin-bottom: 1rem !important;
         break-inside: auto;
-        /* Changed from avoid to allow breaking */
+        /* Default: allow breaking */
         page-break-inside: auto;
+    }
+
+    /* Keep Chart Cards intact */
+    .card:has(canvas),
+    .col-md-7 .card,
+    .col-md-5 .card {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
     }
 
     .card-header {
