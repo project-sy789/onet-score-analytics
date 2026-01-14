@@ -257,10 +257,7 @@ canvas {
     /* Layout adjustments - NUCLEAR OPTION to fix Flexbox Print Issues */
     body,
     .container-fluid,
-    .row,
     .col-12,
-    .col-md-7,
-    .col-md-5,
     .card,
     .card-body {
         display: block !important;
@@ -273,6 +270,30 @@ canvas {
         max-width: none !important;
         position: static !important;
         /* Remove relative/absolute positioning */
+    }
+
+    /* Enable Flex for Rows to allow Side-by-Side */
+    .row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* Specific Widths for Chart Columns (Side-by-Side) */
+    .col-md-7 {
+        flex: 0 0 58% !important;
+        max-width: 58% !important;
+        width: 58% !important;
+        padding-right: 10px !important;
+    }
+
+    .col-md-5 {
+        flex: 0 0 41% !important;
+        max-width: 41% !important;
+        width: 41% !important;
+        padding-left: 5px !important;
     }
 
     /* Re-add necessary margins for separation */
@@ -306,8 +327,26 @@ canvas {
     /* REMOVED specifics to let generic canvas rules apply (fixes fit issues) */
 
     /* Ensure the parent div of canvas also has height */
+    /* Compact Charts for A4 Fitting */
+    /* Ensure the parent div of canvas fits */
+    #quadrantChart,
+    #distributionChart,
+    #groupDistributionChart {
+        min-height: 0 !important;
+        /* Override inline style */
+        height: auto !important;
+    }
+
+    div[style*="height: 300px"] {
+        height: auto !important;
+        /* Override inline height wrapper */
+    }
+
     canvas {
-        min-height: 350px !important;
+        min-height: 0 !important;
+        max-height: 220px !important;
+        /* Compact height for printing */
+        height: 220px !important;
         width: 100% !important;
     }
 
