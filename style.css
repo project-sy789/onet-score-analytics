@@ -478,6 +478,11 @@ canvas {
         overflow: visible !important;
         max-height: none !important;
     }
+
+    /* Remove top margin from main container in print to pull it up to header */
+    .container-fluid.mt-4 {
+        margin-top: 0 !important;
+    }
 }
 
 /* Loading animation */

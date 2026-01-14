@@ -118,16 +118,17 @@ try {
 <body class="d-flex flex-column">
     <!-- Print Only Header -->
     <!-- Print Only Header -->
-    <div class="d-none d-print-block text-center mb-4 mt-3">
-        <div class="d-flex align-items-center justify-content-center mb-2">
+    <!-- Print Only Header -->
+    <div class="d-none d-print-block text-center mb-2 mt-2">
+        <div class="d-flex align-items-center justify-content-center mb-1">
             <img src="logo.png" alt="" width="50" height="50" class="me-3" onerror="this.style.display='none'">
             <div class="text-start">
                 <h4 class="mb-0 fw-bold">โรงเรียนซับใหญ่วิทยาคม</h4>
                 <p class="mb-0 text-muted">ระบบวิเคราะห์ผลสอบ O-NET</p>
             </div>
         </div>
-        <hr>
-        <table style="width: 100%; border: none; margin-bottom: 1rem;">
+        <hr class="my-1">
+        <table style="width: 100%; border: none; margin-bottom: 0.5rem;">
             <tr>
                 <td style="text-align: left; vertical-align: top; width: 50%;">
                     <p class="mb-1"><strong>ระดับชั้น:</strong> <?php echo htmlspecialchars($selected_grade ?: 'ทั้งหมด'); ?></p>
