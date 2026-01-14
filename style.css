@@ -333,13 +333,14 @@ canvas {
     #distributionChart,
     #groupDistributionChart {
         min-height: 0 !important;
-        /* Override inline style */
-        height: auto !important;
+        height: 220px !important;
+        /* Explicitly set height */
+        width: 100% !important;
+        max-height: 220px !important;
     }
 
     div[style*="height: 300px"] {
         height: auto !important;
-        /* Override inline height wrapper */
     }
 
     canvas {
