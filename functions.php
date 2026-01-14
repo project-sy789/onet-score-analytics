@@ -1408,3 +1408,80 @@ function getStudentsByIndicator($pdo, $indicator_id, $grade_level = null, $room_
     $stmt->execute($params);
     return $stmt->fetchAll();
 }
+
+/**
+ * Get Student Group Distribution for Chart
+ * Aggregates segmented student data into counts per tier
+ */
+function getStudentGroupDistribution($pdo, $grade_level = null, $room_number = null, $exam_set = null, $subject = null) {
+    // 1. Get Segmented Data
+    if ($subject) {
+        $segmented = segmentStudentsBySubject($pdo, $subject, $grade_level, $room_number, null, $exam_set);
+    } else {
+        $segmented = segmentStudents($pdo, $grade_level, $room_number, null, $exam_set);
+    }
+    
+    // 2. Initialize Groups (Ordered Highest to Lowest for Display)
+    // Keys match the 'color' returned by segmentStudents
+    $groups = [
+        'purple' => ['label' => 'ดีเยี่ยม', 'count' => 0, 'names' => []],
+        'success' => ['label' => 'ดี', 'count' => 0, 'names' => []],
+        'info' => ['label' => 'ปานกลาง', 'count' => 0, 'names' => []],
+        'warning' => ['label' => 'ต้องพัฒนา', 'count' => 0, 'names' => []],
+        'danger' => ['label' => 'ปรับปรุง', 'count' => 0, 'names' => []]
+    ];
+    
+    // 3. Aggregate Data
+    foreach ($segmented as $s) {
+        $color = $s['color'] ?? 'secondary';
+        $score = isset($s['score']) ? $s['score'] : ($s['total_score'] ?? 0);
+        $name = $s['name'] ?? 'Unknown';
+        
+        // Skip unknown colors or merge secondary?
+        // 'secondary' usually means absent or no data. 
+        // We can ignore it for the "Performance" chart or add an "Absent" bar.
+        // For now, let's skip strict mapping if key doesn't exist.
+        if (!isset($groups[$color])) {
+            continue;
+        }
+        
+        $groups[$color]['count']++;
+        
+        // Sanitize name
+        $clean_name = mb_convert_encoding($name, 'UTF-8', 'UTF-8');
+        // Format: Name (Score)
+        $groups[$color]['names'][] = htmlspecialchars($clean_name) . " (" . number_format((float)$score, 1) . ")";
+    }
+    
+    // 4. Transform for Chart.js
+    $labels = [];
+    $data = [];
+    $names = [];
+    $colors = [];
+    $borderColors = [];
+    
+    // Map internal colors to actual CSS colors (Bootstrap standard + Custom)
+    $colorMap = [
+        'purple' => ['bg' => 'rgba(102, 126, 234, 0.7)', 'border' => 'rgb(102, 126, 234)'],
+        'success' => ['bg' => 'rgba(40, 167, 69, 0.7)', 'border' => 'rgb(40, 167, 69)'],
+        'info' => ['bg' => 'rgba(23, 162, 184, 0.7)', 'border' => 'rgb(23, 162, 184)'],
+        'warning' => ['bg' => 'rgba(255, 193, 7, 0.7)', 'border' => 'rgb(255, 193, 7)'],
+        'danger' => ['bg' => 'rgba(220, 53, 69, 0.7)', 'border' => 'rgb(220, 53, 69)']
+    ];
+    
+    foreach ($groups as $key => $group) {
+        $labels[] = $group['label'];
+        $data[] = $group['count'];
+        $names[] = $group['names'];
+        $colors[] = $colorMap[$key]['bg'];
+        $borderColors[] = $colorMap[$key]['border'];
+    }
+    
+    return [
+        'labels' => $labels,
+        'data' => $data,
+        'names' => array_values($names), // Strict numeric array for JSON
+        'backgroundColor' => $colors,
+        'borderColor' => $borderColors
+    ];
+}

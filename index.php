@@ -610,33 +610,42 @@ try {
                                         ไม่พบข้อมูลคะแนนสำหรับชุดข้อสอบนี้
                                     </div>
                                 <?php else: ?>
-                                    <div style="height: 300px; width: 100%;">
-                                        <canvas id="distributionChart"></canvas>
+                                    <div class="row">
+                                        <!-- Original Distribution (Bell Curve) -->
+                                        <div class="col-md-7">
+                                            <h6 class="text-center mb-3 text-muted">การกระจายตัวของคะแนน (Score Range)</h6>
+                                            <div style="height: 300px; width: 100%;">
+                                                <canvas id="distributionChart"></canvas>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- New Group Distribution (Tiers) -->
+                                        <div class="col-md-5">
+                                            <h6 class="text-center mb-3 text-muted">จำนวนนักเรียนแยกตามกลุ่มคะแนน (Performance Groups)</h6>
+                                            <?php
+                                            // Get Group Distribution Data
+                                            $group_data = getStudentGroupDistribution($pdo, $selected_grade, $selected_room, $selected_exam_set, $selected_subject);
+                                            ?>
+                                            <div style="height: 300px; width: 100%;">
+                                                <canvas id="groupDistributionChart"></canvas>
+                                            </div>
+                                        </div>
                                     </div>
                                     
-                                    <!-- JSON Data for ChartJS -->
                                     <script>
+                                        // 1. Data for Score Distribution (Bell Curve)
                                         var distLabels = <?php echo json_encode($dist_data['labels']); ?>;
                                         var distData = <?php echo json_encode($dist_data['data']); ?>;
-                                        var distLabels = <?php echo json_encode($dist_data['labels']); ?>;
-                                        var distData = <?php echo json_encode($dist_data['data']); ?>;
-                                        var distNames = <?php echo json_encode($dist_data['names'] ?? [], JSON_UNESCAPED_UNICODE); ?>; // Student Names per bin
-                                    </script>
-                                    
-                                    <!-- DEBUG: Check Data -->
-                                    <details class="text-muted small mt-2">
-                                        <summary>คลิกเพื่อดูข้อมูลดิบ (สำหรับตรวจสอบ)</summary>
-                                        <div class="card card-body bg-light">
-                                            <p><strong>ชื่อนักเรียนในแต่ละแท่งกราฟ:</strong></p>
-                                            <code style="word-wrap: break-word;">
-                                                <?php echo htmlspecialchars(json_encode($dist_data['names'] ?? [], JSON_UNESCAPED_UNICODE)); ?>
-                                            </code>
-                                        </div>
-                                    </details>
-                                    
-                                    <script>
+                                        var distNames = <?php echo json_encode($dist_data['names'] ?? [], JSON_UNESCAPED_UNICODE); ?>; 
                                         
-                                        // Initialize Chart immediately
+                                        // 2. Data for Group Distribution (Tiers)
+                                        var groupLabels = <?php echo json_encode($group_data['labels']); ?>;
+                                        var groupData = <?php echo json_encode($group_data['data']); ?>;
+                                        var groupNames = <?php echo json_encode($group_data['names'] ?? [], JSON_UNESCAPED_UNICODE); ?>;
+                                        var groupBg = <?php echo json_encode($group_data['backgroundColor']); ?>;
+                                        var groupBorder = <?php echo json_encode($group_data['borderColor']); ?>;
+
+                                        // Initialize Charts
                                         if (document.getElementById('distributionChart')) {
                                             const distCtx = document.getElementById('distributionChart').getContext('2d');
                                             new Chart(distCtx, {
@@ -645,12 +654,12 @@ try {
                                                     labels: distLabels,
                                                     datasets: [{
                                                         label: 'จำนวนนักเรียน (Number of Students)',
-                                                        data: distData, // JS automatically handles [1, 4, etc]
+                                                        data: distData,
                                                         backgroundColor: 'rgba(54, 162, 235, 0.7)',
                                                         borderColor: 'rgba(54, 162, 235, 1)',
                                                         borderWidth: 1,
-                                                        barPercentage: 0.8,
-                                                        categoryPercentage: 0.9
+                                                        // barPercentage: 0.9,
+                                                        // categoryPercentage: 0.9
                                                     }]
                                                 },
                                                 options: {
@@ -661,50 +670,67 @@ try {
                                                             callbacks: {
                                                                 footer: function(context) {
                                                                     const dataIndex = context[0].dataIndex;
-                                                                    // Check if distNames is array or object and access safely
                                                                     const names = distNames ? distNames[dataIndex] : null;
-                                                                    
                                                                     if (names && names.length > 0) {
-                                                                        // Show max 15 names
                                                                         const maxShow = 15;
                                                                         let displayNames = names.slice(0, maxShow);
-                                                                        if (names.length > maxShow) {
-                                                                            displayNames.push('...และอีก ' + (names.length - maxShow) + ' คน');
-                                                                        }
+                                                                        if (names.length > maxShow) displayNames.push('...และอีก ' + (names.length - maxShow) + ' คน');
                                                                         return '\nรายชื่อนักเรียน (' + names.length + ' คน):\n' + displayNames.join('\n');
                                                                     }
                                                                     return '';
                                                                 }
                                                             }
                                                         },
-                                                        legend: {
-                                                            position: 'top',
-                                                        },
-                                                        title: {
-                                                            display: true,
-                                                            text: 'การกระจายตัวของคะแนนรวม (Total Score Distribution)'
-                                                        }
+                                                        legend: { display: false },
+                                                        title: { display: false }
                                                     },
                                                     scales: {
-                                                        y: {
-                                                            beginAtZero: true,
-                                                            title: {
-                                                                display: true,
-                                                                text: 'จำนวนนักเรียน (คน)'
-                                                            },
-                                                            ticks: {
-                                                                stepSize: 1,
-                                                                precision: 0
+                                                        y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+                                                        x: { title: { display: true, text: 'ช่วงคะแนน (Score Range)' } }
+                                                    }
+                                                }
+                                            });
+                                        }
+
+                                        if (document.getElementById('groupDistributionChart')) {
+                                            const groupCtx = document.getElementById('groupDistributionChart').getContext('2d');
+                                            new Chart(groupCtx, {
+                                                type: 'bar',
+                                                data: {
+                                                    labels: groupLabels,
+                                                    datasets: [{
+                                                        label: 'จำนวนนักเรียน',
+                                                        data: groupData,
+                                                        backgroundColor: groupBg,
+                                                        borderColor: groupBorder,
+                                                        borderWidth: 1
+                                                    }]
+                                                },
+                                                options: {
+                                                    responsive: true,
+                                                    maintainAspectRatio: false,
+                                                    plugins: {
+                                                        tooltip: {
+                                                            callbacks: {
+                                                                footer: function(context) {
+                                                                    const dataIndex = context[0].dataIndex;
+                                                                    const names = groupNames ? groupNames[dataIndex] : null;
+                                                                    if (names && names.length > 0) {
+                                                                        const maxShow = 15;
+                                                                        let displayNames = names.slice(0, maxShow);
+                                                                        if (names.length > maxShow) displayNames.push('...และอีก ' + (names.length - maxShow) + ' คน');
+                                                                        return '\nรายชื่อนักเรียน (' + names.length + ' คน):\n' + displayNames.join('\n');
+                                                                    }
+                                                                    return '';
+                                                                }
                                                             }
                                                         },
-                                                        x: {
-                                                            title: {
-                                                                display: true,
-                                                                text: 'ช่วงคะแนน (Score Range)'
-                                                            }
-                                                        }
+                                                        legend: { display: false },
+                                                        title: { display: false }
                                                     },
-
+                                                    scales: {
+                                                        y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } }
+                                                    }
                                                 }
                                             });
                                         }
