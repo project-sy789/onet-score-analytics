@@ -302,12 +302,7 @@ canvas {
     }
 
     /* Specific Fix for Chart Containers */
-    #quadrantChart,
-    #distributionChart {
-        min-height: 350px !important;
-        max-height: 400px !important;
-        width: 100% !important;
-    }
+    /* REMOVED specifics to let generic canvas rules apply (fixes fit issues) */
 
     /* Ensure the parent div of canvas also has height */
     canvas {
