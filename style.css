@@ -345,14 +345,22 @@ canvas {
     /* Ensure the parent div of canvas also has height */
     /* Compact Charts for A4 Fitting */
     /* Ensure the parent div of canvas fits */
-    #quadrantChart,
+    /* COMPACT Charts (Side-by-Side ones) */
     #distributionChart,
     #groupDistributionChart {
         min-height: 0 !important;
         height: 220px !important;
-        /* Explicitly set height */
         width: 100% !important;
         max-height: 220px !important;
+    }
+
+    /* LARGE Chart (Quadrant) - Needs to be square/large */
+    #quadrantChart {
+        min-height: 0 !important;
+        height: 450px !important;
+        /* Make it large and square-ish */
+        width: 100% !important;
+        max-height: none !important;
     }
 
     div[style*="height: 300px"] {
