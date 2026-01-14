@@ -340,6 +340,14 @@ canvas {
         page-break-inside: avoid;
     }
 
+    /* Force Chart Headers to be visible and black */
+    .row h6.text-muted {
+        color: black !important;
+        display: block !important;
+        font-weight: bold !important;
+        font-size: 11pt !important;
+    }
+
     img {
         max-width: 100% !important;
     }
