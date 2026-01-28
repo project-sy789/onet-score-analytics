@@ -787,7 +787,7 @@ try {
                                         i.description,
                                         i.subject,
                                         i.grade_level,
-                                        COUNT(DISTINCT CONCAT(COALESCE(q.exam_set, 'default'), '-', qi.question_id)) as question_count,
+                                        COUNT(DISTINCT q.id) as question_count,
                                         GROUP_CONCAT(
                                             DISTINCT CASE 
                                                 WHEN q.question_number IS NOT NULL 
