@@ -335,7 +335,7 @@ $cascade_mapping = [];
                                         <td class="text-center">
                                             <?php if ($score_data): ?>
                                                 <div><?php echo number_format($score_data['pct'], 2); ?>%</div>
-                                                <small class="text-muted">(<?php echo (float)$score_data['raw'] == (int)$score_data['raw'] ? (int)$score_data['raw'] : number_format($score_data['raw'], 4); ?>/<?php echo (float)$score_data['max'] == (int)$score_data['max'] ? (int)$score_data['max'] : number_format($score_data['max'], 4); ?>)</small>
+                                                <small class="text-muted">(<?php echo (float)$score_data['raw'] == (int)$score_data['raw'] ? (int)$score_data['raw'] : number_format($score_data['raw'], 2); ?>/<?php echo (float)$score_data['max'] == (int)$score_data['max'] ? (int)$score_data['max'] : number_format($score_data['max'], 2); ?>)</small>
                                                 <?php 
                                         if ($score_data) {
                                             if ($prev_score !== null) {
