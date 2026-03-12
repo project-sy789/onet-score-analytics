@@ -55,12 +55,80 @@ try {
             echo "ℹ️ Index 'question_number' not found or already dropped.<br>";
         }
         
-        // Ensure composite index exists
+        // Ensure composite index exists for questions
         try {
             $pdo->exec("ALTER TABLE questions ADD UNIQUE INDEX idx_unique_question (question_number, exam_set)");
             echo "✅ Added unique index 'idx_unique_question'.<br>";
         } catch (Exception $e) {
             echo "ℹ️ Index 'idx_unique_question' already exists (Good).<br>";
+        }
+    }
+    
+    // ==========================================
+    // 1.5 FIX INDICATORS TABLE
+    // ==========================================
+    echo "<h3>1.5. Rebuilding Indicators Table...</h3>";
+    
+    if ($db_driver === 'sqlite') {
+        // Create new table WITHOUT the bad constraint
+        $pdo->exec("
+            CREATE TABLE indicators_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT NOT NULL,
+                description TEXT,
+                subject TEXT,
+                grade_level TEXT,
+                exam_set TEXT DEFAULT 'default'
+            )
+        ");
+        
+        // Check if old indicators table has exam_set
+        $has_exam_set = false;
+        $cols = $pdo->query("PRAGMA table_info(indicators)")->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($cols as $col) {
+            if ($col['name'] === 'exam_set') {
+                $has_exam_set = true;
+                break;
+            }
+        }
+        
+        $exam_set_select = $has_exam_set ? "exam_set" : "'default' as exam_set";
+        
+        // Copy Data
+        $pdo->exec("INSERT INTO indicators_new (id, code, description, subject, grade_level, exam_set) 
+                    SELECT id, code, description, subject, grade_level, $exam_set_select FROM indicators");
+        
+        // Drop Old
+        $pdo->exec("DROP TABLE indicators");
+        
+        // Rename New
+        $pdo->exec("ALTER TABLE indicators_new RENAME TO indicators");
+        
+        // Add Correct Indices
+        $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_indicators_unique ON indicators (code, subject, grade_level, exam_set)");
+        $pdo->exec("CREATE INDEX IF NOT EXISTS idx_indicators_subject ON indicators (subject)");
+        $pdo->exec("CREATE INDEX IF NOT EXISTS idx_indicators_exam_set ON indicators (exam_set)");
+        
+        echo "✅ Indicators table rebuilt successfully.<br>";
+        
+    } else {
+        // MySQL
+        // Drop any old specific index that might conflict, such as code uniqueness without exam_set
+        $indicator_indices_to_drop = ['code', 'code_2', 'idx_unique_indicator'];
+        foreach ($indicator_indices_to_drop as $idx) {
+            try {
+                $pdo->exec("ALTER TABLE indicators DROP INDEX $idx");
+                echo "✅ Dropped old indicator index '$idx'.<br>";
+            } catch (Exception $e) {}
+        }
+        
+        // Sometimes UNIQUE constraint was added anonymously, so we try to catch the precise unique key name if possible via reflection, but the easiest way is to ensure a named one exists and catches all.
+        try {
+            // First we make sure all duplicates are cleared or just add the new index
+            $pdo->exec("ALTER TABLE indicators ADD UNIQUE INDEX idx_indicators_full (code, subject, grade_level, exam_set)");
+            echo "✅ Added unique index 'idx_indicators_full' to indicators.<br>";
+        } catch (Exception $e) {
+             echo "ℹ️ Unique index 'idx_indicators_full' already exists or conflict found: " . $e->getMessage() . "<br>";
         }
     }
     
