@@ -413,12 +413,13 @@ function importMasterIndicators($pdo, $file, $is_mysql = false) {
                 ON DUPLICATE KEY UPDATE
                     description = VALUES(description),
                     subject = VALUES(subject),
-                    grade_level = VALUES(grade_level),
-                    exam_set = VALUES(exam_set)
+                    grade_level = VALUES(grade_level)
             ");
         } else {
+            // Use IGNORE instead of REPLACE to prevent changing the ID and triggering ON DELETE CASCADE
+            // which wipes out question_indicators bindings.
             $stmt = $pdo->prepare("
-                INSERT OR REPLACE INTO indicators (code, description, subject, grade_level, exam_set)
+                INSERT OR IGNORE INTO indicators (code, description, subject, grade_level, exam_set)
                 VALUES (?, ?, ?, ?, ?)
             ");
         }
