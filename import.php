@@ -327,16 +327,23 @@ function importIndicators($pdo, $file, $is_mysql = false) {
                 $code = normalizeIndicatorCode($code);
                 
                 // Insert or update indicator
-                // Insert or update indicator
                 if ($is_mysql) {
-                    $indicator_stmt->execute([$code, $description, $subject, $grade_level]);
+                    $indicator_stmt = $pdo->prepare("
+                        INSERT IGNORE INTO indicators (code, description, subject, grade_level, exam_set)
+                        VALUES (?, ?, ?, ?, ?)
+                    ");
+                    $indicator_stmt->execute([$code, $description, $subject, $grade_level, $exam_set]);
                 } else {
-                    $indicator_stmt->execute([$code, $description, $subject, $grade_level]);
+                    $indicator_stmt = $pdo->prepare("
+                        INSERT OR IGNORE INTO indicators (code, description, subject, grade_level, exam_set)
+                        VALUES (?, ?, ?, ?, ?)
+                    ");
+                    $indicator_stmt->execute([$code, $description, $subject, $grade_level, $exam_set]);
                 }
                 
-                // Get indicator ID
-                $id_stmt = $pdo->prepare("SELECT id FROM indicators WHERE code = ?");
-                $id_stmt->execute([$code]);
+                // Get indicator ID specific to this exam set (or default if it's a master indicator being referenced)
+                $id_stmt = $pdo->prepare("SELECT id FROM indicators WHERE code = ? AND (exam_set = ? OR exam_set = 'default') ORDER BY CASE WHEN exam_set = 'default' THEN 1 ELSE 0 END LIMIT 1");
+                $id_stmt->execute([$code, $exam_set]);
                 $indicator_id = $id_stmt->fetchColumn();
                 
                 if ($indicator_id) {
