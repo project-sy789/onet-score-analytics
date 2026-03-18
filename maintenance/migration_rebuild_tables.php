@@ -40,7 +40,7 @@ try {
         $pdo->exec("ALTER TABLE questions_new RENAME TO questions");
         
         // Add Correct Indices
-        $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_question ON questions (question_number, exam_set)");
+        $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_question ON questions (question_number, exam_set, subject, grade_level)");
         $pdo->exec("CREATE INDEX IF NOT EXISTS idx_questions_number ON questions (question_number)");
         
         echo "✅ Questions table rebuilt successfully.<br>";
@@ -57,10 +57,15 @@ try {
         
         // Ensure composite index exists for questions
         try {
-            $pdo->exec("ALTER TABLE questions ADD UNIQUE INDEX idx_unique_question (question_number, exam_set)");
+            // First try to drop the old one if it's not complete
+            $pdo->exec("ALTER TABLE questions DROP INDEX idx_unique_question");
+        } catch (Exception $e) {}
+        
+        try {
+            $pdo->exec("ALTER TABLE questions ADD UNIQUE INDEX idx_unique_question (question_number, exam_set, subject, grade_level)");
             echo "✅ Added unique index 'idx_unique_question'.<br>";
         } catch (Exception $e) {
-            echo "ℹ️ Index 'idx_unique_question' already exists (Good).<br>";
+            echo "ℹ️ Index 'idx_unique_question' already exists or conflict found: " . $e->getMessage() . "<br>";
         }
     }
     

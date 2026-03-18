@@ -824,11 +824,18 @@ try {
                                     $cov_params[] = $selected_exam_set;
                                 }
 
-                                // Apply Room Filter to Scores (must be done in JOIN to preserve indicators with no scores)
-                                if ($selected_room) {
-                                    $coverage_query .= " AND s.student_id IN (SELECT student_id FROM students WHERE grade_level = ? AND room_number = ?)";
-                                    $cov_params[] = $selected_grade; 
-                                    $cov_params[] = $selected_room;
+                                // Apply Grade Level and Room Filter to Scores (must be done in JOIN to preserve indicators with no scores)
+                                // This securely isolates scores so M.6 students don't leak into M.3 averages if they share an exam_set name
+                                if ($selected_grade) {
+                                    $coverage_query .= " AND s.student_id IN (SELECT student_id FROM students WHERE grade_level = ?";
+                                    $cov_params[] = $selected_grade;
+                                    
+                                    if ($selected_room) {
+                                        $coverage_query .= " AND room_number = ?";
+                                        $cov_params[] = $selected_room;
+                                    }
+                                    
+                                    $coverage_query .= ")";
                                 }
 
                                 $coverage_query .= " WHERE 1=1";

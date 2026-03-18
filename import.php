@@ -291,14 +291,16 @@ function importIndicators($pdo, $file, $is_mysql = false) {
             // Split indicator codes (support comma-separated)
             $indicator_codes = array_map('trim', explode(',', $indicator_codes_str));
             
-            // Create or update question (composite key: question_number + exam_set + grade_level)
-            // Fix: Include grade_level in uniqueness check to prevent collisions between M.3/M.6 sharing same exam_set name
-            $q_check_sql = "SELECT id FROM questions WHERE question_number = ? AND exam_set = ?";
-            $q_check_params = [$question_number, $exam_set];
+            // Create or update question (composite key: question_number + exam_set + subject + grade_level)
+            // Fix: Include grade_level and subject in uniqueness check to prevent collisions between M.3/M.6 or SCI/MATH sharing same exam_set name
+            $q_check_sql = "SELECT id FROM questions WHERE question_number = ? AND exam_set = ? AND subject = ?";
+            $q_check_params = [$question_number, $exam_set, $subject];
             
             if (!empty($grade_level)) {
                 $q_check_sql .= " AND grade_level = ?";
                 $q_check_params[] = $grade_level;
+            } else {
+                $q_check_sql .= " AND (grade_level IS NULL OR grade_level = '')";
             }
             
             $q_check = $pdo->prepare($q_check_sql);
@@ -341,9 +343,23 @@ function importIndicators($pdo, $file, $is_mysql = false) {
                     $indicator_stmt->execute([$code, $description, $subject, $grade_level, $exam_set]);
                 }
                 
-                // Get indicator ID specific to this exam set (or default if it's a master indicator being referenced)
-                $id_stmt = $pdo->prepare("SELECT id FROM indicators WHERE code = ? AND (exam_set = ? OR exam_set = 'default') ORDER BY CASE WHEN exam_set = 'default' THEN 1 ELSE 0 END LIMIT 1");
-                $id_stmt->execute([$code, $exam_set]);
+                // Get indicator ID specific to this exam set, scoped by subject and grade_level to avoid M.3/M.6 collisions
+                $id_sql = "SELECT id FROM indicators WHERE code = ? AND (exam_set = ? OR exam_set = 'default')";
+                $id_params = [$code, $exam_set];
+                
+                if (!empty($subject)) {
+                    $id_sql .= " AND subject = ?";
+                    $id_params[] = $subject;
+                }
+                if (!empty($grade_level)) {
+                    $id_sql .= " AND (grade_level = ? OR grade_level IS NULL)";
+                    $id_params[] = $grade_level;
+                }
+                
+                $id_sql .= " ORDER BY CASE WHEN exam_set = 'default' THEN 1 ELSE 0 END LIMIT 1";
+                
+                $id_stmt = $pdo->prepare($id_sql);
+                $id_stmt->execute($id_params);
                 $indicator_id = $id_stmt->fetchColumn();
                 
                 if ($indicator_id) {
