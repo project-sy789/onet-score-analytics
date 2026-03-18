@@ -770,16 +770,23 @@ try {
                                 // Refactored to properly show Uncovered Indicators even when Filtering by Exam Set
                                 
                                 $exam_set_condition = "";
+                                $cov_params = []; // Initialize here to hold join params
                                 
                                 if ($selected_exam_set) {
-                                    $exam_set_condition = "AND q.exam_set = ?";
-                                    // Params will be added in order. We need to be careful with bind order.
-                                    // The placeholders are entering the query string at specific points.
+                                    $exam_set_condition .= " AND q.exam_set = ?";
+                                    $cov_params[] = $selected_exam_set;
                                 }
                                 
-                                // To handle params correctly with dynamic injection, we'll rebuild the params array completely
-                                $cov_params = [];
+                                if ($selected_subject) {
+                                    $exam_set_condition .= " AND q.subject = ?";
+                                    $cov_params[] = $selected_subject;
+                                }
                                 
+                                if ($selected_grade) {
+                                    $exam_set_condition .= " AND (q.grade_level = ? OR q.grade_level IS NULL)";
+                                    $cov_params[] = $selected_grade;
+                                }
+
                                 $coverage_query = "
                                     SELECT 
                                         i.id,
@@ -818,11 +825,6 @@ try {
                                     LEFT JOIN questions q ON qi.question_id = q.id $exam_set_condition
                                     LEFT JOIN scores s ON q.question_number = s.question_number AND q.exam_set = s.exam_set
                                 ";
-                                
-                                // Add Exam Set param if condition exists
-                                if ($selected_exam_set) {
-                                    $cov_params[] = $selected_exam_set;
-                                }
 
                                 // Apply Grade Level and Room Filter to Scores (must be done in JOIN to preserve indicators with no scores)
                                 // This securely isolates scores so M.6 students don't leak into M.3 averages if they share an exam_set name
